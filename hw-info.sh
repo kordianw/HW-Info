@@ -6,6 +6,24 @@
 # * By Kordian Witek <code@kordian.com>
 #
 
+# DOCUMENTATION:
+# Provides the following information as a 1-line:
+# - hostname (and domain)
+# - OS type
+# - OS name (eg: Ubuntu) and version
+# - Distribution name (or MacOS release friendly name)
+# - year of OS release
+# - Bare Metal or VM
+# - HW type & model
+# - How much RAM (in GB)
+# - How many CPUs
+# - Real or virtual CPUs?
+# - CPU model/type and CPU speed (in GHz)
+# - 32bit or 64bit system?
+# - Local Disk sizes (in human friendly format)
+# - FS type
+# - When was the OS built?
+
 # store LSCPU info, as we will use it quite often
 LSCPU=/tmp/lscpu-$$
 lscpu 2>/dev/null > $LSCPU
