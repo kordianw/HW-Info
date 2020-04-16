@@ -1,6 +1,10 @@
-#!/bin/sh
-# gather HW info
-# * By Kordian Witek
+#!/bin/bash
+# Portable & simple HW-Info script - quickly & easily get an idea of the HW you're working on
+# - works on any OS that can run bash
+# - tested on Linux, MacOS & Cygwin
+#
+# * By Kordian Witek <code@kordian.com>
+#
 
 # store LSCPU info, as we will use it quite often
 LSCPU=/tmp/lscpu-$$
