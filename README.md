@@ -1,5 +1,5 @@
 # HW-Info
-Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on
+Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, etc)
 
 ## Description
 Provides the following information as a 1-line in CSV format:
@@ -11,16 +11,17 @@ Provides the following information as a 1-line in CSV format:
 - Bare Metal or VM
 - HW type & model
 - How much RAM (in GB)
-- How many CPUs
-- Real or virtual CPUs?
+- How many CPUs (or cores/threads)
+- Real or virtual CPUs? (CPUs vs vCPUs)
 - CPU model/type and CPU speed (in GHz)
 - 32bit or 64bit system?
 - Local Disk sizes (in human friendly format)
-- FS type
-- When was the OS built?
+- FS type (eg: ext4, ntfs)
+- When was the OS built? (based on dates of some key root files)
 
 ## Examples
 Examples on running on various Operating Systems:
+
 `$ ./hw-info.sh`
 
 #### Linux (Ubuntu & Mint):
