@@ -24,8 +24,10 @@ Examples on running on various Operating Systems:
 
 `$ ./hw-info.sh`
 
-#### Linux (Ubuntu & Mint):
+#### Linux (Ubuntu, RHEL & Mint):
 `speedy: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, KVM: pc-q35-3.1 QEMU Standard PC (Q35+ICH9, 2009), 4GB RAM, 2 x vCPU E5-2680 v3 @ 2.50GHz, 64bit, 77.2G+2.5G Disk/ext4, Built Apr'14`
+
+`kw-rhel74/LAB: RHEL 7.4/'17, VMware, 8GB RAM, 4 x vCPU E5-2697 v2 @ 2.70GHz, 64bit, 20G Disk/xfs, Built Oct'17`
 
 `laptop-pc (t480s): Linux Mint 19.3 Tricia/'19, BareMetal: Lenovo ThinkPad T480s, 15GB RAM, 8 x CPU i7-8650U @ 1.90GHz, 64bit, 119.5G Disk/overlay, Built Aug'07`
 
