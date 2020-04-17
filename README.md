@@ -2,7 +2,7 @@
 Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on
 
 ## Description
-Provides the following information as a 1-line:
+Provides the following information as a 1-line in CSV format:
 - hostname (and domain)
 - OS type
 - OS name (eg: Ubuntu) and version
@@ -21,6 +21,7 @@ Provides the following information as a 1-line:
 
 ## Examples
 Examples on running on various Operating Systems:
+`$ ./hw-info.sh`
 
 #### Linux (Ubuntu & Mint):
 `speedy: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, KVM: pc-q35-3.1 QEMU Standard PC (Q35+ICH9, 2009), 4GB RAM, 2 x vCPU E5-2680 v3 @ 2.50GHz, 64bit, 77.2G+2.5G Disk/ext4, Built Apr'14`
