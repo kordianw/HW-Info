@@ -29,6 +29,9 @@ Examples on running on various Operating Systems:
 
 `laptop-pc (t480s): Linux Mint 19.3 Tricia/'19, BareMetal: Lenovo ThinkPad T480s, 15GB RAM, 8 x CPU i7-8650U @ 1.90GHz, 64bit, 119.5G Disk/overlay, Built Aug'07`
 
+#### MacOS (Darwin)
+`maccy/LCL: MacOS (Darwin) macOS 10.13.6/'20, BareMetal: MacBook Air (13-inch, Early 2014), 8GB RAM, 4 x CPU i5-4260U @ 1.40GHz, 64bit, 251GB Disk/apfs, Built '19`
+
 #### Cygwin:
 `Speedy-PC: Cygwin 3.0.7/'19, BareMetal: Dell XPS 8900, 32GB RAM, 8 x CPU i7-6700 @ 3.40GHz, 32bit, 477G+932G+7.3T Disk/ntfs, Built Sep'17`
 
