@@ -127,7 +127,7 @@ MEM=`free -k 2>/dev/null |awk '/^Mem:/{printf("%.0fGB", $2/1024/1024)}'`
 #
 OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 [ -z "$OS_TYPE" ] && OS_TYPE=`uname -s 2>/dev/null | sed 's/^Darwin$/MacOS (Darwin)/'`
-[ -s /etc/redhat-release ] && OS_TYPE="RHEL"
+[ -s /etc/redhat-release ] && OS_TYPE="Linux RHEL"
 
 OS_VERSION=`cat /etc/redhat-release 2>/dev/null |awk '{print $(NF-1)}'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/*release* 2>/dev/null |awk -F= '/^(NAME|VERSION)=/{print $NF}' |sed 's/"//g; s#GNU/Linux##; s/ (\(.*\))/ \u\1/' |xargs`
