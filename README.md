@@ -34,7 +34,7 @@ Examples on running on various Operating Systems:
 #### MacOS (Darwin)
 `maccy/LCL: MacOS (Darwin) macOS 10.13.6/'20, BareMetal: MacBook Air (13-inch, Early 2014), 8GB RAM, 4 x CPU i5-4260U @ 1.40GHz, 64bit, 251GB Disk/apfs, Built '19`
 
-#### Cygwin:
+#### Cygwin (Windows):
 `Speedy-PC: Cygwin 3.0.7/'19, BareMetal: Dell XPS 8900, 32GB RAM, 8 x CPU i7-6700 @ 3.40GHz, 32bit, 477G+932G+7.3T Disk/ntfs, Built Sep'17`
 
 #### Raspbian:
