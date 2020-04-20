@@ -37,7 +37,7 @@ Examples on running on various Operating Systems:
 #### Cygwin (Windows):
 `Speedy-PC: Cygwin 3.0.7/'19, BareMetal: Dell XPS 8900, 32GB RAM, 8 x CPU i7-6700 @ 3.40GHz, 32bit, 477G+932G+7.3T Disk/ntfs, Built Sep'17`
 
-### Chrome OS (Chromebook Linux Shell):
+#### Chrome OS (Chromebook Linux Shell):
 `penguin: Linux Debian 9 Stretch/'20, KVM: ChromiumOS crosvm, 3GB RAM, 2 x vCPU 06/4c 1.6GHz, 64bit, 7.7G Disk/btrfs, Built Feb'20`
 
 #### Raspbian:
