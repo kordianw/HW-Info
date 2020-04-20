@@ -40,5 +40,5 @@ Examples on running on various Operating Systems:
 #### Chrome OS (Chromebook Linux Shell):
 `penguin: Linux Debian 9 Stretch/'20, KVM: ChromiumOS crosvm, 3GB RAM, 2 x vCPU 06/4c 1.6GHz, 64bit, 7.7G Disk/btrfs, Built Feb'20`
 
-#### Raspbian:
+#### Raspbian (Raspberry Pi):
 `pi-hole: Linux Raspbian 9 Stretch/'19, BareMetal: RaspberryPi 3 B+ Rev 1.3, 1GB RAM, 4 x CPU ARMv7 Rev4 (v7l) 1.4GHz, 59.6G Disk/ext4, Built Nov'18`
