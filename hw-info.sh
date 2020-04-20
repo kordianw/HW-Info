@@ -148,7 +148,7 @@ BIT_TYPE=`uname -m | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/ar
 #
 # DISK SIZE & FS TYPE
 #
-HD_SIZE=`lsblk -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,UUID" 2>/dev/null |awk '/^(sd|mmcblk)/{print $4}' |head -5 |xargs |sed 's/ /+/g'`
+HD_SIZE=`lsblk -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,UUID" 2>/dev/null |awk '/^(sd|nvme|mmcblk)/{print $4}' |head -5 |xargs |sed 's/ /+/g'`
 [ -z "$HD_SIZE" -a -x "/usr/sbin/diskutil" ] && HD_SIZE=`diskutil list 2>/dev/null | awk '/:.*disk0$/{print $3$4}' |sed 's/^\*//; s/\.0GB/GB/'`
 [ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |awk '/[0-9]/{print $2}' |xargs |sed 's/ /+/g; s/Gi/GB/'`
 
