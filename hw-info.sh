@@ -147,10 +147,11 @@ BIT_TYPE=`uname -m | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/ar
 
 #
 # DISK SIZE & FS TYPE
+# - we exclude anything in MB range, shoul be GB or higher
 #
-HD_SIZE=`lsblk -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,UUID" 2>/dev/null |awk '/^(sd|nvme|mmcblk)/{print $4}' |head -5 |xargs |sed 's/ /+/g'`
+HD_SIZE=`lsblk -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,UUID" 2>/dev/null |awk '/^(sd|vd|nvme|mmcblk)/{print $4}' |grep -v "M$" |head -5 |xargs |sed 's/ /+/g'`
 [ -z "$HD_SIZE" -a -x "/usr/sbin/diskutil" ] && HD_SIZE=`diskutil list 2>/dev/null | awk '/:.*disk0$/{print $3$4}' |sed 's/^\*//; s/\.0GB/GB/'`
-[ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |awk '/[0-9]/{print $2}' |xargs |sed 's/ /+/g; s/Gi/GB/'`
+[ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v 'tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs' |awk '/[0-9]/{print $2}'| grep -v "M$" |xargs |sed 's/ /+/g; s/Gi/GB/'`
 
 FS_TYPE=`df -Th |awk '/\/$/{print $2}'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/'`
@@ -188,7 +189,8 @@ fi
 [ -z "$IP" ] && IP=`hostname -i | awk '{print $1}'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I | awk '{print $1}'`
 if [ -n "$IP" ]; then
-  DNS_NAME=`nslookup "$IP" |awk '/Name:|name =/{print $NF}' |awk -F. '{print $1}'`
+  DNS_NAME=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' |awk -F. '{print $1}'`
+  [ -z "$DNS_NAME" ] && DNS_NAME=`host "$IP" 2>/dev/null |awk '{print $NF}' |awk -F. '{print $1}'`
   if [ -n "$DNS_NAME" -a "$DNS_NAME" != "$HOST" ]; then
     HOST_EXTRA=" ($DNS_NAME)"
   fi
