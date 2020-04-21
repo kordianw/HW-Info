@@ -1,22 +1,21 @@
 # HW-Info
-Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, etc)
+Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, Windows, Chromebook, etc)
 
 ## Description
 Provides the following information as a 1-line in CSV format:
-- hostname (and domain)
-- OS type
-- OS name (eg: Ubuntu) and version
+- hostname (and domain, if appropriate)
+- OS type & OS name (eg: Ubuntu) and version
 - Distribution name (or MacOS release friendly name)
 - year of OS release
-- Bare Metal or VM
-- HW type & model
+- Bare Metal or VM, VM type
+- HW type & model (incl hypervisor type)
 - How much RAM (in GB)
 - How many CPUs (or cores/threads)
 - Real or virtual CPUs? (CPUs vs vCPUs)
 - CPU model/type and CPU speed (in GHz)
 - 32bit or 64bit system?
 - Local Disk sizes (in human friendly format)
-- FS type (eg: ext4, ntfs)
+- FS type (eg: ext4, ntfs, btrfs)
 - When was the OS built? (based on dates of some key root files)
 
 ## Examples
