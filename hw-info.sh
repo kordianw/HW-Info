@@ -79,7 +79,7 @@ HW=`cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/
 
 # Mac
 if [ -z "$HW" -a "`uname -s`" = "Darwin" ]; then
-  HW=`defaults read ~/Library/Preferences/com.apple.SystemProfiler.plist 'CPU Names' |cut -sd '"' -f 4 |uniq |sed 's/, \(One|Two|Three|Four|Five\) .* Ports)/)/'`
+  HW=`defaults read ~/Library/Preferences/com.apple.SystemProfiler.plist 'CPU Names' 2>/dev/null |cut -sd '"' -f 4 |uniq |sed 's/, \(One|Two|Three|Four|Five\) .* Ports)/)/'`
   [ -z "$HW" ] && HW=`curl -s https://support-sp.apple.com/sp/product?cc=$( system_profiler SPHardwareDataType |awk '/Serial/ {print $4}' |cut -c 9- ) |sed 's|.*<configCode>\(.*\)</configCode>.*|\1|'`
   [ -z "$HW" ] && HW=`sysctl hw.model 2>/dev/null |sed 's/.*: //; s/MacBook\([A-Z]\)/MacBook \1/; s/\([a-z]\)\([0-9]\)/\1 \2/;'`
 fi
@@ -93,7 +93,7 @@ if [ -z "$HW" ]; then
   fi
 fi
 
-[ -n "$HW" ] && HW="`echo $HW | sed 's/^ //; s/LENOVO/Lenovo/; s/TOSHIBA/Toshiba/; s/Hewlett Packard/HP/i; s/DELL/Dell/; s/ASUSTeK COMPUTER INC\./Asus/i; s/ASUSTeK/Asus/i; s/ Corp\.//i; s/ Inc\.//i; s/^[0-9][0-9][^ ]* //; s/ [0-9]\.[0-9][^ ]* / /;'`"   # do not allow HW starting with digits
+[ -n "$HW" ] && HW="`echo $HW | sed 's/^ //; s/LENOVO/Lenovo/; s/TOSHIBA/Toshiba/; s/Hewlett Packard/HP/; s/DELL/Dell/; s/ASUSTeK COMPUTER INC\./Asus/; s/ASUSTeK/Asus/; s/ Corp\.//; s/ Inc\.//; s/^[0-9][0-9][^ ]* //; s/ [0-9]\.[0-9][^ ]* / /;'`"   # do not allow HW starting with digits
 [ -n "$HW" ] && HW=": $HW"
 
 #
@@ -156,13 +156,15 @@ BIT_TYPE=`uname -m | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/ar
 # - we exclude anything in MB range, shoul be GB or higher
 #
 HD_SIZE=`lsblk -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,UUID" 2>/dev/null |awk '/^(sd|vd|nvme|mmcblk)/{print $4}' |grep -v "M$" |head -5 |xargs |sed 's/ /+/g'`
-[ -z "$HD_SIZE" -a -x "/usr/sbin/diskutil" ] && HD_SIZE=`diskutil list 2>/dev/null | awk '/:.*disk0$/{print $3$4}' |sed 's/^\*//; s/\.0GB/GB/'`
+[ -z "$HD_SIZE" -a -x "/usr/sbin/diskutil" ] && HD_SIZE=`diskutil list 2>/dev/null | awk '/:.*disk0$/{print $3$4}' |sed 's/^\*//; s/\.[0123]GB/GB/'`
 [ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs' |awk '/[0-9]/{print $2}'| grep -v "M$" |xargs |sed 's/ /+/g; s/Gi/GB/'`
 [ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs' |awk '/[0-9]/{print $2}'| xargs |sed 's/ /+/g; s/Gi/GB/'`
 
 FS_TYPE=`df -Th / 2>/dev/null |awk '/\/$/{print $2}'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/disk0/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/Apple_HFS.*disk1/{print $2}' | sed 's/Apple_HFS/hfs/'`
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/disk1/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
 
 
 
