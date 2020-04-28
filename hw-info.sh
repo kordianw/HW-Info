@@ -93,7 +93,7 @@ if [ -z "$HW" ]; then
   fi
 fi
 
-[ -n "$HW" ] && HW="`echo $HW | sed 's/^ //; s/LENOVO/Lenovo/; s/ Inc\.//; s/^[0-9][0-9][^ ]* //'`"   # do not allow HW starting with digits
+[ -n "$HW" ] && HW="`echo $HW | sed 's/^ //; s/LENOVO/Lenovo/; s/TOSHIBA/Toshiba/; s/Hewlett Packard/HP/i; s/DELL/Dell/; s/ASUSTeK COMPUTER INC\./Asus/i; s/ASUSTeK/Asus/i; s/ Corp\.//i; s/ Inc\.//i; s/^[0-9][0-9][^ ]* //; s/ [0-9]\.[0-9][^ ]* / /;'`"   # do not allow HW starting with digits
 [ -n "$HW" ] && HW=": $HW"
 
 #
