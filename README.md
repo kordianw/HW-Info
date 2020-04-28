@@ -31,9 +31,9 @@ Examples on running on various Operating Systems:
 `laptop-pc (t480s): Linux Mint 19.3 Tricia/'19, BareMetal: Lenovo ThinkPad T480s, 15GB RAM, 8 x CPU i7-8650U @ 1.90GHz, 64bit, 119.5G Disk/overlay, Built Aug'07`
 
 #### MacOS (Darwin)
-`maccy/LCL: MacOS (Darwin) macOS 10.13.6/'20, BareMetal: MacBook Air (13-inch, Early 2014), 8GB RAM, 4 x CPU i5-4260U @ 1.40GHz, 64bit, 251GB Disk/apfs, Built '19`
+`maccy/LCL: MacOS (Darwin) macOS 10.13.6/'20 (High Sierra), BareMetal: MacBook Air (13-inch, Early 2014), 8GB RAM, 4 x CPU i5-4260U @ 1.40GHz, 64bit, 251GB Disk/apfs, Built '19`
 
-`macbook12: MacOS (Darwin) macOS 10.12.6/'19, BareMetal: MacBook (Retina, 12-inch, Early 2016), 8GB RAM, 4 x CPU m5-6Y54 @ 1.10GHz, 64bit, 500GB Disk/hfs, Built '19`
+`macbook12: MacOS (Darwin) macOS 10.12.6/'19 (Sierra), BareMetal: MacBook (Retina, 12-inch, Early 2016), 8GB RAM, 4 x CPU m5-6Y54 @ 1.10GHz, 64bit, 500GB Disk/hfs, Built '19`
 
 #### Windows (via WSL - Windows Subsystem for Linux)
 `DESKTOP-GTTHH7U: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'19, WSL/container, 4GB RAM, 1 x vCPU i7-6700 @ 3.40GHz, 64bit, 50G Disk/lxfs, Built Apr'20`
