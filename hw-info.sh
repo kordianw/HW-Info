@@ -134,11 +134,38 @@ MEM=`free -k 2>/dev/null |awk '/^Mem:/{printf("%.0fGB", $2/1024/1024)}'`
 OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 [ -z "$OS_TYPE" ] && OS_TYPE=`uname -s 2>/dev/null | sed 's/^Darwin$/MacOS (Darwin)/'`
 [ -s /etc/redhat-release ] && OS_TYPE="Linux RHEL"
+[ -s /etc/centos-release ] && OS_TYPE="Linux CentOS"
+[ -s /etc/debian-release ] && OS_TYPE="Debian Linux"
 
 OS_VERSION=`cat /etc/redhat-release 2>/dev/null |awk '{print $(NF-1)}'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/*release* 2>/dev/null |awk -F= '/^(NAME|VERSION)=/{print $NF}' |sed 's/"//g; s#GNU/Linux##; s/ (\(.*\))/ \u\1/' |xargs`
+[ -z "$OS_VERSION" -a -x "/usr/bin/sw_vers" ] && OS_VERSION=`sw_vers -productVersion 2>/dev/null | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" -a -x "/usr/sbin/system_profiler" ] && OS_VERSION=`system_profiler SPSoftwareDataType 2>/dev/null | awk -F: '/System Version:/{print $NF}' | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`uname -r |sed 's/(.*//'`
+
+if [ "$OS_TYPE" = "MacOS (Darwin)" -o "$OS_TYPE" = "MacOS" -o "$OS_TYPE" = "Darwin" ]; then
+  if [[ $OSTYPE == darwin19* ]]; then
+    EXTRA_OS_INFO=' (Catalina)'
+  elif [[ $OSTYPE == darwin18* ]]; then
+    EXTRA_OS_INFO=' (Mojave)'
+  elif [[ $OSTYPE == darwin17* ]]; then
+    EXTRA_OS_INFO=' (High Sierra)'
+  elif [[ $OSTYPE == darwin16* ]]; then
+    EXTRA_OS_INFO=' (Sierra)'
+  elif [[ $OSTYPE == darwin15* ]]; then
+    EXTRA_OS_INFO=' (El Capitan)'
+  elif [[ $OSTYPE == darwin14* ]]; then
+    EXTRA_OS_INFO=' (Yosemite)'
+  elif [[ $OSTYPE == darwin13* ]]; then
+    EXTRA_OS_INFO=' (Mavericks)'
+  elif [[ $OSTYPE == darwin12* ]]; then
+    EXTRA_OS_INFO=' (Mountain Lion)'
+  elif [[ $OSTYPE == darwin11* ]]; then
+    EXTRA_OS_INFO=' (Lion)'
+  elif [[ $OSTYPE == darwin10* ]]; then
+    EXTRA_OS_INFO=' (Snow Leopard)'
+  fi
+fi
 
 OS_YEAR=`uname -v |grep -Eo "[12][09][0-9]{2}" |sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/"`
 
@@ -211,7 +238,7 @@ fi
 # /FINAL PRINT/
 #
 [ -z "$VM" ] && VM="BareMetal"
-echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR, $VM$HW, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE Disk/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g'
+echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $VM$HW, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE Disk/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g'
 
 # clean-up
 rm -f $LSCPU
