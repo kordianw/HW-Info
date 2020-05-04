@@ -225,8 +225,8 @@ HOST=`uname -n |sed 's/\..*//'`
 DOMAIN=`domainname 2>/dev/null |grep -v "none" | sed 's/\..*//'`
 [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ] && DOMAIN=`uname -n | sed 's/\.[a-z0-9-]*\.com//; s/^[a-z0-9-]*\.\([a-z0-9-]*\)/\1/; s/\..*//'`
 if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
-  [ -z "$IP" ] && IP=`hostname -i | awk '{print $1}'`
-  [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
+  [ -z "$IP" ] && IP=`hostname -i 2>/dev/null | awk '{print $1}'`
+  [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
   [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
   if [ -n "$IP" ]; then
     DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $2}' | sed 's/[^A-Za-z0-9_-]*//g'`
@@ -240,8 +240,8 @@ else
   [ "$DOMAIN" = "/LOCALDOMAIN" ] && DOMAIN=""
 fi
 
-[ -z "$IP" ] && IP=`hostname -i | awk '{print $1}'`
-[ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
+[ -z "$IP" ] && IP=`hostname -i 2>/dev/null | awk '{print $1}'`
+[ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
 if [ -n "$IP" ]; then
   DNS_NAME=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}' | sed 's/[^A-Za-z0-9_-]*//g'`
