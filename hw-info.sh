@@ -100,6 +100,10 @@ fi
 
 [ -n "$HW" ] && HW="`echo $HW | sed 's/^ //; s/LENOVO/Lenovo/; s/TOSHIBA/Toshiba/; s/Hewlett Packard/HP/; s/DELL/Dell/; s/ASUSTeK COMPUTER INC\./Asus/; s/ASUSTeK/Asus/; s/ Corp\.//; s/ Inc\.//; s/^[0-9][0-9][^ ]* //; s/ [0-9]\.[0-9][^ ]* / /;'`"   # do not allow HW starting with digits
 [ -n "$HW" ] && HW=": $HW"
+if [ -z "$HW" -a "$VM" = "VMware" ]; then
+  VM="VM"
+  HW=": VMware"
+fi
 
 #
 # CPU MODEL, CORES & TYPE
