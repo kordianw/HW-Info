@@ -38,6 +38,9 @@ Examples on running on various Operating Systems:
 #### Windows (via WSL - Windows Subsystem for Linux)
 `DESKTOP-GTTHH7U: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'19, WSL/container, 4GB RAM, 1 x vCPU i7-6700 @ 3.40GHz, 64bit, 50G Disk/lxfs, Built Apr'20`
 
+#### Public Cloud - AWS / GCP
+`ip-172-31-85-73/EC2: Linux Amazon Linux AMI 2018.03/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz, 64bit, 7.9G Disk/ext4, Built Apr'20`
+
 #### Chrome OS (via Chromebook Linux Shell):
 `penguin: Linux Debian 9 Stretch/'20, KVM: ChromiumOS crosvm, 3GB RAM, 2 x vCPU 06/4c 1.6GHz, 64bit, 7.7G Disk/btrfs, Built Feb'20`
 
