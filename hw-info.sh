@@ -71,7 +71,7 @@ if [ -n "$VM" ]; then
 fi
 
 # add the word VM to a non obvious hypervisor types
-if [ -n "$VM" -a `echo $VM | grep -ic 'VM|container'` -eq 0 ]; then
+if [ -n "$VM" -a `echo $VM | egrep -ic 'VM|container'` -eq 0 ]; then
   VM="$VM VM"
 fi
 
