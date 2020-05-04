@@ -70,11 +70,16 @@ if [ -n "$VM" ]; then
   [ -n "$VM_TYPE" ] && VM="$VM/$VM_TYPE"
 fi
 
+# add the word VM to a non obvious hypervisor types
+if [ -n "$VM" -a `echo $VM | grep -ic 'VM|container'` -eq 0 ]; then
+  VM="$VM VM"
+fi
+
 
 #
 # HARDWARE TYPE
 #
-HW=`cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null |sed 's/[^[:print:]]//' |sort -u |grep -v '^\.*$' |xargs |sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/Intel Corporation//; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/ + /+/g; s/  / /g; s/^ //; s/ $//'`
+HW=`cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null |sed 's/[^[:print:]]//' |sort -u |grep -v '^\.*$' |xargs |sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/Intel Corporation//; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM/; s/ + /+/g; s/  / /g; s/^ //; s/ $//'`
 [ -z "$HW" ] && HW=`dmesg 2>/dev/null |grep "DMI:" |sed 's/.*: //' |awk -F/ '{print $1}' |sed 's/VMware, Inc. VMware Virtual Platform//; s/ Plus/+/; s/ Model//'`
 
 # Mac
@@ -214,7 +219,16 @@ BUILT=`ls -lact --full-time /etc 2>/dev/null |awk 'END {print $6}'`
 #
 HOST=`uname -n |sed 's/\..*//'`
 DOMAIN=`domainname 2>/dev/null |grep -v "none" | sed 's/\..*//'`
-[ -z "$DOMAIN" ] && DOMAIN=`uname -n | sed 's/\.[a-z0-9-]*\.com//; s/^[a-z0-9-]*\.\([a-z0-9-]*\)/\1/; s/\..*//'`
+[ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ] && DOMAIN=`uname -n | sed 's/\.[a-z0-9-]*\.com//; s/^[a-z0-9-]*\.\([a-z0-9-]*\)/\1/; s/\..*//'`
+if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
+  [ -z "$IP" ] && IP=`hostname -i | awk '{print $1}'`
+  [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
+  [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
+  if [ -n "$IP" ]; then
+    DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $2}' | sed 's/[^A-Za-z0-9_-]*//g'`
+    [ -z "$DOMAIN" ] && DOMAIN=`host "$IP" 2>/dev/null |awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $2}'`
+  fi
+fi
 if [ "$DOMAIN" = "$HOST" ]; then
   DOMAIN=""
 else
@@ -222,11 +236,11 @@ else
   [ "$DOMAIN" = "/LOCALDOMAIN" ] && DOMAIN=""
 fi
 
-[ -x /sbin/ifconfig ] && IP=`/sbin/ifconfig |awk '/inet.*broadcast/ && !/127.0/{print $2}' |tail -1`
 [ -z "$IP" ] && IP=`hostname -i | awk '{print $1}'`
+[ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
 if [ -n "$IP" ]; then
-  DNS_NAME=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}'`
+  DNS_NAME=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}' | sed 's/[^A-Za-z0-9_-]*//g'`
   [ -z "$DNS_NAME" ] && DNS_NAME=`host "$IP" 2>/dev/null |awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}'`
   if [ -n "$DNS_NAME" -a "$DNS_NAME" != "$HOST" ]; then
     HOST_EXTRA=" ($DNS_NAME)"
