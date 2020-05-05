@@ -235,7 +235,7 @@ if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
 fi
 if [ "$DOMAIN" = "$HOST" ]; then
   DOMAIN=""
-else
+elif [ -n "$DOMAIN" ]; then
   DOMAIN="/`echo $DOMAIN |tr a-z A-Z`"
   [ "$DOMAIN" = "/LOCALDOMAIN" ] && DOMAIN=""
 fi
