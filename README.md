@@ -41,6 +41,8 @@ Examples on running on various Operating Systems:
 #### Public Cloud - AWS / GCP
 `ip-172-31-85-73/EC2: Linux Amazon Linux AMI 2018.03/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz, 64bit, 7.9G Disk/ext4, Built Apr'20`
 
+`general-gcp-mach: Linux Debian 9 Stretch/'20, KVM: Google Compute Engine, 592MB RAM, 1 x vCPU @ 2.30GHz, 64bit, 30G Disk/ext4, Built Apr'20`
+
 #### Chrome OS (via Chromebook Linux Shell):
 `penguin: Linux Debian 9 Stretch/'20, KVM: ChromiumOS crosvm, 3GB RAM, 2 x vCPU 06/4c 1.6GHz, 64bit, 7.7G Disk/btrfs, Built Feb'20`
 
