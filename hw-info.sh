@@ -26,20 +26,9 @@
 # - FS type (eg: ext4, ntfs)
 # - When was the OS built? (based on dates of some key root files)
 #
-# Examples on running on various Operating Systems:
+# How to run (takes no params):
 #
 # $ ./hw-info.sh
-#
-# Linux (Ubuntu & Mint):
-# speedy: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, KVM: pc-q35-3.1 QEMU Standard PC (Q35+ICH9, 2009), 4GB RAM, 2 x vCPU E5-2680 v3 @ 2.50GHz, 64bit, 77.2G+2.5G Disk/ext4, Built Apr'14
-#
-# laptop-pc (t480s): Linux Mint 19.3 Tricia/'19, BareMetal: Lenovo ThinkPad T480s, 15GB RAM, 8 x CPU i7-8650U @ 1.90GHz, 64bit, 119.5G Disk/overlay, Built Aug'07
-#
-# Cygwin:
-# Speedy-PC: Cygwin 3.0.7/'19, BareMetal: Dell XPS 8900, 32GB RAM, 8 x CPU i7-6700 @ 3.40GHz, 32bit, 477G+932G+7.3T Disk/ntfs, Built Sep'17
-#
-# Raspbian:
-# pi-hole: Linux Raspbian 9 Stretch/'19, BareMetal: RaspberryPi 3 B+ Rev 1.3, 1GB RAM, 4 x CPU ARMv7 Rev4 (v7l) 1.4GHz, 59.6G Disk/ext4, Built Nov'18
 #
 
 ##################################################
@@ -105,6 +94,7 @@ if [ -z "$HW" -a "$VM" = "VMware" ]; then
   HW=": VMware"
 fi
 
+
 #
 # CPU MODEL, CORES & TYPE
 #
@@ -133,7 +123,7 @@ CPU_TYPE="CPU"
 # MEMORY
 #
 MEM=`free -k 2>/dev/null |awk '/^Mem:/{printf("%.0fGB", $2/1024/1024)}'`
-[ "$MEM" = "0GB" ] && MEM=`free -k 2>/dev/null |awk '/^Mem:/{printf("%.0fMB", $2/1024)}'`
+[ "$MEM" = "0GB" -o "$MEM" = "1GB" ] && MEM=`free -k 2>/dev/null |awk '/^Mem:/{printf("%.0fMB", $2/1024)}'`
 [ -z "$MEM" ] && MEM=`sysctl hw.memsize 2>/dev/null | awk '{printf("%.0fGB", $2/1024/1024/1024)}'`
 
 
@@ -179,12 +169,10 @@ fi
 OS_YEAR=`uname -v |grep -Eo "[12][09][0-9]{2}" |sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/"`
 
 
-
 #
 # 64bit of 32bit
 #
 BIT_TYPE=`uname -m | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/armv7./32bit/'`
-
 
 
 #
@@ -201,7 +189,6 @@ FS_TYPE=`df -Th / 2>/dev/null |awk '/\/$/{print $2}'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/disk0/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/Apple_HFS.*disk1/{print $2}' | sed 's/Apple_HFS/hfs/'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/disk1/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
-
 
 
 #
@@ -250,7 +237,6 @@ if [ -n "$IP" ]; then
     HOST_EXTRA=" ($DNS_NAME)"
   fi
 fi
-
 
 #
 # /FINAL PRINT/
