@@ -118,6 +118,79 @@ NO_OF_CPU=`awk '/^CPU\(s\):/{print $NF}' $LSCPU`
 CPU_TYPE="CPU"
 [ -n "$VM" ] && CPU_TYPE="vCPU"
 
+# add CPU architecture information
+if [ -n "$CPU_MODEL" ]; then
+  # uses: https://en.wikichip.org/wiki/intel/cpuid
+  # cascade lake 2nd gen stuff from https://www.intel.com/content/www/us/en/products/docs/processors/xeon/2nd-gen-xeon-scalable-spec-update.html
+  # 2nd gen xeon scalable cpus: cascade lake sku is 82xx, 62xx, 52xx, 42xx 32xx W-32xx  from https://www.intel.com/content/www/us/en/products/docs/processors/xeon/2nd-gen-xeon-scalable-spec-update.html
+  # skylake 1st gen stuff from https://www.intel.com/content/www/us/en/processors/xeon/scalable/xeon-scalable-spec-update.html
+  # 1st gen xeon scalable cpus: 81xx, 61xx, 51xx, 81xxT, 61xxT 81xxF, 61xxF, 51xx, 41xx, 31xx, 51xxT 41xxT, 51xx7,
+  CPU_NAME=`cat /proc/cpuinfo 2>/dev/null | awk '
+  function decode_fam_mod(vndor, fam, mod, mod_nm) {
+    if (vndor == "GenuineIntel") {
+      # cpuid tables from https://en.wikichip.org/wiki/intel/cpuid
+      dcd[1,1]="Ice Lake";              dcd[1,2] ="Family 6 Model 108";
+      dcd[2,1]="Ice Lake";              dcd[2,2] ="Family 6 Model 106";
+      dcd[3,1]="Skylake";               dcd[3,2] ="Family 6 Model 85"; # 06_55h  Intel always does the hex fam_model
+      dcd[4,1]="Broadwell";             dcd[4,2] ="Family 6 Model 79"; # 06_4fh
+      dcd[5,1]="Broadwell";             dcd[5,2] ="Family 6 Model 86"; # 06_56h
+      dcd[6,1]="Haswell";               dcd[6,2] ="Family 6 Model 63"; # 06_3fh
+      dcd[7,1]="Ivy Bridge";            dcd[7,2] ="Family 6 Model 62";
+      dcd[8,1]="Sandy Bridge";          dcd[8,2] ="Family 6 Model 45"; # 06_2dh
+      dcd[9,1]="Westmere";              dcd[9,2] ="Family 6 Model 44";
+      dcd[10,1]="EX";                   dcd[10,2]="Family 6 Model 47";
+      dcd[11,1]="Nehalem";              dcd[11,2]="Family 6 Model 46";
+      dcd[12,1]="Lynnfield";            dcd[12,2]="Family 6 Model 30";
+      dcd[13,1]="Bloomfield, EP, WS";   dcd[13,2]="Family 6 Model 26";
+      dcd[14,1]="Penryn";               dcd[14,2]="Family 6 Model 29";
+      dcd[15,1]="Harpertown, QC, Wolfdale, Yorkfield";  dcd[15,2]="Family 6 Model 23";
+
+      dcd[16,1]="Skylake";              dcd[16,2]="Family 6 Model 94";
+      dcd[17,1]="Skylake";              dcd[17,2]="Family 6 Model 78";
+
+      dcd[18,1]="Kaby/Coffee Lake";     dcd[18,2]="Family 6 Model 158";
+      dcd[19,1]="Kaby/Coffee Lake";     dcd[19,2]="Family 6 Model 142";
+
+      dcd[20,1]="Ice Lake";             dcd[20,2]="Family 6 Model 126";
+      dcd[21,1]="Ice Lake";             dcd[21,2]="Family 6 Model 125";
+      str = "Family " fam " Model " mod;
+      #printf("str= %s\n", str);
+      res="";
+      for(k=1;k <=21;k++) { if (dcd[k,2] == str) {res=dcd[k,1];break;}}
+      if (k == 3) {
+        # so Cooper Lake/Cascade Lake/SkyLake)
+        if (match(mod_nm, / [86543]2[0-9][0-9]/) > 0) { res="Cascade Lake";} else
+        if (match(mod_nm, / [86543]1[0-9][0-9]/) > 0) { res="Skylake";}
+      }
+      return res;
+    }
+  }
+  /^vendor_id/ {
+    vndr=$(NF);
+  }
+  /^cpu family/ {
+    fam=$(NF);
+  }
+  /^model/ {
+    if ($2 == ":") {
+      mod=$(NF);
+    }
+  }
+  /^model name/ {
+#model name : Intel(R) Xeon(R) CPU E5-2620 v4 @ 2.10GHz
+    n=split($0, arr, ":");
+    mod_nm = arr[2];
+    #printf("vndr= %s, fam= %s, mod= %s, mod_nm= %s\n", vndr, fam, mod, mod_nm);
+    cpu_name=decode_fam_mod(vndr, fam, mod, mod_nm);
+    printf("%s\n", cpu_name);
+    exit;
+  }
+'`
+  if [ -n "$CPU_NAME" ]; then
+    CPU_MODEL="$CPU_MODEL ($CPU_NAME)"
+  fi
+fi
+
 
 #
 # MEMORY
