@@ -40,9 +40,11 @@ Examples on running on various Operating Systems:
 
 #### Public Cloud - AWS / GCP
 `ip-172-31-44-12/EC2: Amazon Linux 2/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz, 64bit, 8G Disk/xfs, Built Apr'20`
+
 `ip-172-31-39-11/EC2: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz, 64bit, 7.7G Disk/ext4, Built Apr'20`
 
 `debian-gcp/US-EAST1-B: Linux Debian 9 Stretch/'20, KVM: Google Compute Engine, 592MB RAM, 1 x vCPU @ 2.30GHz, 64bit, 30G Disk/ext4, Built Apr'20`
+
 `ubuntu-gcp/US-EAST1-B: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, KVM: Google Compute Engine, 575MB RAM, 1 x vCPU @ 2.00GHz, 64bit, 10G Disk/ext4, Built Apr'20`
 
 #### Chrome OS (via Chromebook Linux Shell):
