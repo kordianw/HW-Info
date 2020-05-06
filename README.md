@@ -31,17 +31,19 @@ Examples on running on various Operating Systems:
 `laptop-pc (t480s): Linux Mint 19.3 Tricia/'19, BareMetal: Lenovo ThinkPad T480s, 15GB RAM, 8 x CPU i7-8650U @ 1.90GHz, 64bit, 119.5G Disk/overlay, Built Aug'07`
 
 #### MacOS (Darwin)
-`maccy/LCL: MacOS (Darwin) macOS 10.13.6/'20 (High Sierra), BareMetal: MacBook Air (13-inch, Early 2014), 8GB RAM, 4 x CPU i5-4260U @ 1.40GHz, 64bit, 251GB Disk/apfs, Built '19`
+`maccy/LCL: MacOS (Darwin) macOS 10.13.6/'20 (High Sierra), BareMetal: MacBook Air (13-inch, Early 2014), 8GB RAM, 4 x CPU i5-4260U @ 1.40GHz, 64bit, 251G Disk/apfs, Built '19`
 
-`macbook12: MacOS (Darwin) macOS 10.12.6/'19 (Sierra), BareMetal: MacBook (Retina, 12-inch, Early 2016), 8GB RAM, 4 x CPU m5-6Y54 @ 1.10GHz, 64bit, 500GB Disk/hfs, Built '19`
+`macbook12: MacOS (Darwin) macOS 10.12.6/'19 (Sierra), BareMetal: MacBook (Retina, 12-inch, Early 2016), 8GB RAM, 4 x CPU m5-6Y54 @ 1.10GHz, 64bit, 500G Disk/hfs, Built '19`
 
 #### Windows (via WSL - Windows Subsystem for Linux)
 `DESKTOP-GTTHH7U: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'19, WSL/container, 4GB RAM, 1 x vCPU i7-6700 @ 3.40GHz, 64bit, 50G Disk/lxfs, Built Apr'20`
 
 #### Public Cloud - AWS / GCP
-`ip-172-31-85-73/EC2: Linux Amazon Linux AMI 2018.03/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz, 64bit, 7.9G Disk/ext4, Built Apr'20`
+`ip-172-31-44-12/EC2: Amazon Linux 2/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz, 64bit, 8G Disk/xfs, Built Apr'20`
+`ip-172-31-39-11/EC2: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz, 64bit, 7.7G Disk/ext4, Built Apr'20`
 
-`general-gcp-mach: Linux Debian 9 Stretch/'20, KVM: Google Compute Engine, 592MB RAM, 1 x vCPU @ 2.30GHz, 64bit, 30G Disk/ext4, Built Apr'20`
+`debian-gcp/US-EAST1-B: Linux Debian 9 Stretch/'20, KVM: Google Compute Engine, 592MB RAM, 1 x vCPU @ 2.30GHz, 64bit, 30G Disk/ext4, Built Apr'20`
+`ubuntu-gcp/US-EAST1-B: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, KVM: Google Compute Engine, 575MB RAM, 1 x vCPU @ 2.00GHz, 64bit, 10G Disk/ext4, Built Apr'20`
 
 #### Chrome OS (via Chromebook Linux Shell):
 `penguin: Linux Debian 9 Stretch/'20, KVM: ChromiumOS crosvm, 3GB RAM, 2 x vCPU 06/4c 1.6GHz, 64bit, 7.7G Disk/btrfs, Built Feb'20`
