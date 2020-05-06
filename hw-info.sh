@@ -68,7 +68,7 @@ fi
 #
 # HARDWARE TYPE
 #
-HW=`cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null |sed 's/[^[:print:]]//' |sort -u |grep -v '^\.*$' |xargs |sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/Intel Corporation//; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/ + /+/g; s/  / /g; s/^ //; s/ $//'`
+HW=`cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null |sed 's/[^[:print:]]//' |sort -u |grep -v '^\.*$' |xargs |sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/Intel Corporation//; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/ V[0-9]\.[0-9][0-9]*.*//; s/ + /+/g; s/\b\([A-Za-z]\+\)[ ,\n]\1/\1/g; s/\([^ ]*\) \([^ ]*\) \([^ ]*\) \(\2\) /\1 \2 \3 /g; s/  / /g; s/^ //; s/ $//'`
 [ -z "$HW" ] && HW=`dmesg 2>/dev/null |grep "DMI:" |sed 's/.*: //' |awk -F/ '{print $1}' |sed 's/VMware, Inc. VMware Virtual Platform//; s/ Plus/+/; s/ Model//'`
 
 # Mac
@@ -195,7 +195,7 @@ fi
 #
 # MEMORY
 #
-MEM=`dmesg | awk '/Memory:.*K available/{print $4}' | sed 's/.*\///; s/K$//' | awk '{printf("%.0fGB\n", $1/1024/1024)}'`
+MEM=`dmesg 2>/dev/null | awk '/Memory:.*K available/{print $4}' | sed 's/.*\///; s/K$//' | awk '{printf("%.0fGB\n", $1/1024/1024)}'`
 [ -z "$MEM" ] && MEM=`free -k 2>/dev/null |awk '/^Mem:/{printf("%.0fGB", $2/1024/1024)}'`
 if [ "$MEM" = "0GB" -o "$MEM" = "1GB" ]; then
   MEM=`dmesg | awk '/Memory:.*K available/{print $4}' | sed 's/.*\///; s/K$//' | awk '{printf("%.0fMB\n", $1/1024)}' | sed 's/^9..MB/1GB/; s/^1...MB/1GB/'`
@@ -258,7 +258,7 @@ BIT_TYPE=`uname -m | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/ar
 # DISK SIZE & FS TYPE
 # - we exclude anything in MB range, shoul be GB or higher
 #
-HD_SIZE=`lsblk -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,UUID" 2>/dev/null |awk '/^(sd|vd|xvd|nvme|mmcblk|hd)/{print $4}' |grep -v "M$" |head -3 |xargs |sed 's/ /+/g'`
+HD_SIZE=`lsblk -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,UUID" 2>/dev/null |awk '/^(sd|vd|xvd|nvme|mmcblk|hd)/{print $4}' |egrep -v "K$|M$" |sed 's/\([0-9]\)\([A-Z]\)/\1 \2/' |awk '{ printf("%.0f%s\n", $1,$2) }' |head -3 |xargs |sed 's/ /+/g'`
 [ -z "$HD_SIZE" -a -x "/usr/sbin/diskutil" ] && HD_SIZE=`diskutil list 2>/dev/null | awk '/:.*disk0$/{print $3$4}' |sed 's/^\*//;'`
 [ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs' |awk '/[0-9]/{print $2}'| grep -v "M$" |xargs |sed 's/ /+/g; s/Gi/GB/'`
 [ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs' |awk '/[0-9]/{print $2}'| xargs |sed 's/ /+/g; s/Gi/GB/'`
