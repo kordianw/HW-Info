@@ -13,6 +13,7 @@ Provides the following information as a 1-line in CSV format:
 - How many CPUs (or cores/threads)
 - Real or virtual CPUs? (CPUs vs vCPUs)
 - CPU model/type and CPU speed (in GHz)
+- CPU Architecture (eg: Haswell, Skylake, Ice Lake, etc)
 - 32bit or 64bit system?
 - Local Disk sizes (in human friendly format)
 - FS type (eg: ext4, ntfs, btrfs)
