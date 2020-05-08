@@ -8,22 +8,21 @@
 
 # DOCUMENTATION:
 #
-# Provides the following information as a 1-line in CSV format:
-#
-# - hostname (and domain)
-# - OS type
-# - OS name (eg: Ubuntu) and version
+# Provides the following information as a 1-liner:
+# - hostname (and domain, if appropriate)
+# - OS type & OS name (eg: Ubuntu) and version
 # - Distribution name (or MacOS release friendly name)
 # - year of OS release
-# - Bare Metal or VM
-# - HW type & model
+# - Bare Metal or VM, VM type
+# - HW type & model (incl hypervisor type)
 # - How much RAM (in GB)
 # - How many CPUs (or cores/threads)
 # - Real or virtual CPUs? (CPUs vs vCPUs)
 # - CPU model/type and CPU speed (in GHz)
+# - CPU Architecture (eg: Haswell, Skylake, Ice Lake, etc)
 # - 32bit or 64bit system?
 # - Local Disk sizes (in human friendly format)
-# - FS type (eg: ext4, ntfs)
+# - FS type (eg: ext4, ntfs, btrfs)
 # - When was the OS built? (based on dates of some key root files)
 #
 # How to run (takes no params):
@@ -68,7 +67,7 @@ fi
 #
 # HARDWARE TYPE
 #
-HW=`cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null |sed 's/[^[:print:]]//' |sort -u |grep -v '^\.*$' |xargs |sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/Intel Corporation//; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/ V[0-9]\.[0-9][0-9]*.*//; s/ + /+/g; s/\b\([A-Za-z]\+\)[ ,\n]\1/\1/g; s/\([^ ]*\) \([^ ]*\) \([^ ]*\) \(\2\) /\1 \2 \3 /g; s/  / /g; s/^ //; s/ $//' | awk '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}{printf("\n")}'`
+HW=`cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null |sed 's/[^[:print:]]//' |sort -u |grep -v '^\.*$' |xargs |sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/innotek GmbH Oracle Corporation VirtualBox/Oracle VirtualBox/; s/Intel Corporation//; s/ Corporation//; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/ V[0-9]\.[0-9][0-9]*.*//; s/ + /+/g; s/\b\([A-Za-z]\+\)[ ,\n]\1/\1/g; s/\([^ ]*\) \([^ ]*\) \([^ ]*\) \(\2\) /\1 \2 \3 /g; s/  / /g; s/^[0-9]\.[0-9]* //; s/^ //; s/ $//' | awk '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}{printf("\n")}'`
 [ -z "$HW" ] && HW=`dmesg 2>/dev/null |grep "DMI:" |sed 's/.*: //' |awk -F/ '{print $1}' |sed 's/VMware, Inc. VMware Virtual Platform//; s/ Plus/+/; s/ Model//'`
 # NOTE: to prune dups, can also use: awk -v RS="[ \n]+" '!n[$0]++' 
 
@@ -314,7 +313,8 @@ fi
 if [ -n "$IP" ]; then
   DNS_NAME=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}' | sed 's/[^A-Za-z0-9_-]*//g'`
   [ -z "$DNS_NAME" ] && DNS_NAME=`host "$IP" 2>/dev/null |awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}'`
-  if [ -n "$DNS_NAME" -a "$DNS_NAME" != "$HOST" ]; then
+
+  if [ -n "$DNS_NAME" -a "$DNS_NAME" != "$HOST" -a "$DNS_NAME" != "localhost" ]; then
     HOST_EXTRA=" ($DNS_NAME)"
   fi
 fi
