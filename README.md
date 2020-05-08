@@ -2,7 +2,7 @@
 Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, Windows, Chromebook, etc)
 
 ## Description
-Provides the following information as a 1-line in CSV format:
+Provides the following information as a 1-liner:
 - hostname (and domain, if appropriate)
 - OS type & OS name (eg: Ubuntu) and version
 - Distribution name (or MacOS release friendly name)
@@ -18,6 +18,11 @@ Provides the following information as a 1-line in CSV format:
 - Local Disk sizes (in human friendly format)
 - FS type (eg: ext4, ntfs, btrfs)
 - When was the OS built? (based on dates of some key root files)
+
+## How to run directly
+You can run this directly from GitHub:
+
+`$ curl -s https://raw.githubusercontent.com/kordianw/HW-Info/master/hw-info.sh | bash`
 
 ## Examples
 Examples on running on various Operating Systems:
