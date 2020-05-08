@@ -19,6 +19,10 @@ Provides the following information as a 1-line in CSV format:
 - FS type (eg: ext4, ntfs, btrfs)
 - When was the OS built? (based on dates of some key root files)
 
+## How to run directly
+You can run this directly from GitHub:
+`curl -s https://raw.githubusercontent.com/kordianw/HW-Info/master/hw-info.sh | bash`
+
 ## Examples
 Examples on running on various Operating Systems:
 
