@@ -2,7 +2,7 @@
 Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, Windows, Chromebook, etc)
 
 ## Description
-Provides the following information as a 1-line in CSV format:
+Provides the following information as a 1-liner:
 - hostname (and domain, if appropriate)
 - OS type & OS name (eg: Ubuntu) and version
 - Distribution name (or MacOS release friendly name)
