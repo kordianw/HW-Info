@@ -22,7 +22,7 @@ Provides the following information as a 1-line in CSV format:
 ## How to run directly
 You can run this directly from GitHub:
 
-`curl -s https://raw.githubusercontent.com/kordianw/HW-Info/master/hw-info.sh | bash`
+`$ curl -s https://raw.githubusercontent.com/kordianw/HW-Info/master/hw-info.sh | bash`
 
 ## Examples
 Examples on running on various Operating Systems:
