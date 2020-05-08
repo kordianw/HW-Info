@@ -148,8 +148,8 @@ if [ -n "$CPU_MODEL" ]; then
       dcd[16,1]="Skylake";              dcd[16,2]="Family 6 Model 94";
       dcd[17,1]="Skylake";              dcd[17,2]="Family 6 Model 78";
 
-      dcd[18,1]="Kaby/Coffee Lake";     dcd[18,2]="Family 6 Model 158";
-      dcd[19,1]="Kaby/Coffee Lake";     dcd[19,2]="Family 6 Model 142";
+      dcd[18,1]="Kaby Lake";            dcd[18,2]="Family 6 Model 158";
+      dcd[19,1]="Kaby Lake";            dcd[19,2]="Family 6 Model 142";
 
       dcd[20,1]="Ice Lake";             dcd[20,2]="Family 6 Model 126";
       dcd[21,1]="Ice Lake";             dcd[21,2]="Family 6 Model 125";
