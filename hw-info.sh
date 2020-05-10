@@ -60,14 +60,14 @@ fi
 
 # add the word VM to a non obvious hypervisor types
 if [ -n "$VM" -a `echo $VM | egrep -ic 'VM|container'` -eq 0 ]; then
-  VM="$VM VM"
+  VM=`echo "$VM VM" | sed 's/Microsoft VM/Hyper-V\/VM/'`
 fi
 
 
 #
 # HARDWARE TYPE
 #
-HW=`cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null |sed 's/[^[:print:]]//' |sort -u |grep -v '^\.*$' |xargs |sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/innotek GmbH Oracle Corporation VirtualBox/Oracle VirtualBox/; s/Intel Corporation//; s/ Corporation//; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/ V[0-9]\.[0-9][0-9]*.*//; s/ + /+/g; s/\b\([A-Za-z]\+\)[ ,\n]\1/\1/g; s/\([^ ]*\) \([^ ]*\) \([^ ]*\) \(\2\) /\1 \2 \3 /g; s/  / /g; s/^[0-9]\.[0-9]* //; s/^ //; s/ $//' | awk '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}{printf("\n")}'`
+HW=`cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null |sed 's/[^[:print:]]//' |sort -u |grep -v '^\.*$' |xargs |sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/innotek GmbH Oracle Corporation VirtualBox/Oracle VirtualBox/; s/Intel Corporation//; s/ Corporation//; s/UEFI Release v[0-9].[0-9]*//; s/Virtual Machine/VM/; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/ V[0-9]\.[0-9][0-9]*.*//; s/ + /+/g; s/\b\([A-Za-z]\+\)[ ,\n]\1/\1/g; s/\([^ ]*\) \([^ ]*\) \([^ ]*\) \(\2\) /\1 \2 \3 /g; s/  / /g; s/^[0-9]\.[0-9]* //; s/^ //; s/ $//' | awk '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}{printf("\n")}'`
 [ -z "$HW" ] && HW=`dmesg 2>/dev/null |grep "DMI:" |sed 's/.*: //' |awk -F/ '{print $1}' |sed 's/VMware, Inc. VMware Virtual Platform//; s/ Plus/+/; s/ Model//'`
 # NOTE: to prune dups, can also use: awk -v RS="[ \n]+" '!n[$0]++' 
 
@@ -98,9 +98,9 @@ fi
 #
 # CPU MODEL, CORES & TYPE
 #
-CPU_MODEL=`awk -F '  ' '/Model name:/{print $NF}' $LSCPU |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
-[ -z "$CPU_MODEL" ] && CPU_MODEL=`cat /proc/cpuinfo 2>/dev/null |awk -F: '/^model name/{print $NF}' |uniq |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
-[ -z "$CPU_MODEL" ] && CPU_MODEL=`sysctl machdep.cpu.brand_string 2>/dev/null | awk -F: '{print $NF}' |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
+CPU_MODEL=`awk -F '  ' '/Model name:/{print $NF}' $LSCPU |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
+[ -z "$CPU_MODEL" ] && CPU_MODEL=`cat /proc/cpuinfo 2>/dev/null |awk -F: '/^model name/{print $NF}' |uniq |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
+[ -z "$CPU_MODEL" ] && CPU_MODEL=`sysctl machdep.cpu.brand_string 2>/dev/null | awk -F: '{print $NF}' |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
 
 if echo "$CPU_MODEL" |grep -Eq 'MHz|GHz'; then
   CPU_FREQ=""
@@ -120,7 +120,9 @@ CPU_TYPE="CPU"
 
 # add CPU architecture information
 if [ -n "$CPU_MODEL" ]; then
-  # uses: https://en.wikichip.org/wiki/intel/cpuid
+  # populate from: https://en.wikichip.org/wiki/intel/cpuid
+  # years: https://en.wikipedia.org/wiki/List_of_Intel_CPU_microarchitectures
+
   # cascade lake 2nd gen stuff from https://www.intel.com/content/www/us/en/products/docs/processors/xeon/2nd-gen-xeon-scalable-spec-update.html
   # 2nd gen xeon scalable cpus: cascade lake sku is 82xx, 62xx, 52xx, 42xx 32xx W-32xx  from https://www.intel.com/content/www/us/en/products/docs/processors/xeon/2nd-gen-xeon-scalable-spec-update.html
   # skylake 1st gen stuff from https://www.intel.com/content/www/us/en/processors/xeon/scalable/xeon-scalable-spec-update.html
@@ -129,38 +131,39 @@ if [ -n "$CPU_MODEL" ]; then
   function decode_fam_mod(vndor, fam, mod, mod_nm) {
     if (vndor == "GenuineIntel") {
       # cpuid tables from https://en.wikichip.org/wiki/intel/cpuid
-      dcd[1,1]="Ice Lake";              dcd[1,2] ="Family 6 Model 108";
-      dcd[2,1]="Ice Lake";              dcd[2,2] ="Family 6 Model 106";
-      dcd[3,1]="Skylake";               dcd[3,2] ="Family 6 Model 85"; # 06_55h  Intel always does the hex fam_model
-      dcd[4,1]="Broadwell";             dcd[4,2] ="Family 6 Model 79"; # 06_4fh
-      dcd[5,1]="Broadwell";             dcd[5,2] ="Family 6 Model 86"; # 06_56h
-      dcd[6,1]="Haswell";               dcd[6,2] ="Family 6 Model 63"; # 06_3fh
-      dcd[7,1]="Ivy Bridge";            dcd[7,2] ="Family 6 Model 62";
-      dcd[8,1]="Sandy Bridge";          dcd[8,2] ="Family 6 Model 45"; # 06_2dh
-      dcd[9,1]="Westmere";              dcd[9,2] ="Family 6 Model 44";
-      dcd[10,1]="EX";                   dcd[10,2]="Family 6 Model 47";
-      dcd[11,1]="Nehalem";              dcd[11,2]="Family 6 Model 46";
-      dcd[12,1]="Lynnfield";            dcd[12,2]="Family 6 Model 30";
-      dcd[13,1]="Bloomfield, EP, WS";   dcd[13,2]="Family 6 Model 26";
-      dcd[14,1]="Penryn";               dcd[14,2]="Family 6 Model 29";
+      dcd[1,1]="Ice Lake;19";              dcd[1,2] ="Family 6 Model 108";
+      dcd[2,1]="Ice Lake;19";              dcd[2,2] ="Family 6 Model 106";
+      dcd[3,1]="Skylake;15";               dcd[3,2] ="Family 6 Model 85"; # 06_55h  Intel always does the hex fam_model
+      dcd[4,1]="Broadwell;14";             dcd[4,2] ="Family 6 Model 79"; # 06_4fh
+      dcd[5,1]="Broadwell;14";             dcd[5,2] ="Family 6 Model 86"; # 06_56h
+      dcd[6,1]="Haswell;13";               dcd[6,2] ="Family 6 Model 63"; # 06_3fh
+      dcd[7,1]="Ivy Bridge;12";            dcd[7,2] ="Family 6 Model 62";
+      dcd[8,1]="Sandy Bridge;11";          dcd[8,2] ="Family 6 Model 45"; # 06_2dh
+      dcd[9,1]="Westmere;10";              dcd[9,2] ="Family 6 Model 44";
+      dcd[10,1]="EX";                      dcd[10,2]="Family 6 Model 47";
+      dcd[11,1]="Nehalem;08";              dcd[11,2]="Family 6 Model 46";
+      dcd[12,1]="Lynnfield;08";            dcd[12,2]="Family 6 Model 30";
+      dcd[13,1]="Bloomfield;08";           dcd[13,2]="Family 6 Model 26";
+      dcd[14,1]="Penryn;07";               dcd[14,2]="Family 6 Model 29";
       dcd[15,1]="Harpertown, QC, Wolfdale, Yorkfield";  dcd[15,2]="Family 6 Model 23";
 
-      dcd[16,1]="Skylake";              dcd[16,2]="Family 6 Model 94";
-      dcd[17,1]="Skylake";              dcd[17,2]="Family 6 Model 78";
+      dcd[16,1]="Skylake;15";              dcd[16,2]="Family 6 Model 94";
+      dcd[17,1]="Skylake;15";              dcd[17,2]="Family 6 Model 78";
 
-      dcd[18,1]="Kaby Lake";            dcd[18,2]="Family 6 Model 158";
-      dcd[19,1]="Kaby Lake";            dcd[19,2]="Family 6 Model 142";
+      dcd[18,1]="Kaby Lake;16";            dcd[18,2]="Family 6 Model 158";
+      dcd[19,1]="Kaby Lake;16";            dcd[19,2]="Family 6 Model 142";
 
-      dcd[20,1]="Ice Lake";             dcd[20,2]="Family 6 Model 126";
-      dcd[21,1]="Ice Lake";             dcd[21,2]="Family 6 Model 125";
+      dcd[20,1]="Ice Lake;19";             dcd[20,2]="Family 6 Model 126";
+      dcd[21,1]="Ice Lake;19";             dcd[21,2]="Family 6 Model 125";
+
       str = "Family " fam " Model " mod;
       #printf("str= %s\n", str);
       res="";
       for(k=1;k <=21;k++) { if (dcd[k,2] == str) {res=dcd[k,1];break;}}
       if (k == 3) {
         # so Cooper Lake/Cascade Lake/SkyLake)
-        if (match(mod_nm, / [86543]2[0-9][0-9]/) > 0) { res="Cascade Lake";} else
-        if (match(mod_nm, / [86543]1[0-9][0-9]/) > 0) { res="Skylake";}
+        if (match(mod_nm, / [86543]2[0-9][0-9]/) > 0) { res="Cascade Lake;19";} else
+        if (match(mod_nm, / [86543]1[0-9][0-9]/) > 0) { res="Skylake;15";}
       }
       return res;
     }
@@ -187,7 +190,7 @@ if [ -n "$CPU_MODEL" ]; then
   }
 '`
   if [ -n "$CPU_NAME" ]; then
-    CPU_MODEL="$CPU_MODEL ($CPU_NAME)"
+    CPU_MODEL=`echo "$CPU_MODEL ($CPU_NAME)" | sed "s/;/'/"`
   fi
 fi
 
@@ -304,7 +307,7 @@ if [ "$DOMAIN" = "$HOST" ]; then
   DOMAIN=""
 elif [ -n "$DOMAIN" ]; then
   DOMAIN="/`echo $DOMAIN |tr a-z A-Z`"
-  [ "$DOMAIN" = "/LOCALDOMAIN" ] && DOMAIN=""
+  [ "$DOMAIN" = "/LOCALDOMAIN" -o "$DOMAIN" = "/LOCALHOST" ] && DOMAIN=""
 fi
 
 [ -z "$IP" ] && IP=`hostname -i 2>/dev/null | awk '{print $1}'`
