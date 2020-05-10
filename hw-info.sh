@@ -98,9 +98,9 @@ fi
 #
 # CPU MODEL, CORES & TYPE
 #
-CPU_MODEL=`awk -F '  ' '/Model name:/{print $NF}' $LSCPU |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Core(TM) //; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
-[ -z "$CPU_MODEL" ] && CPU_MODEL=`cat /proc/cpuinfo 2>/dev/null |awk -F: '/^model name/{print $NF}' |uniq |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Core(TM) //; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
-[ -z "$CPU_MODEL" ] && CPU_MODEL=`sysctl machdep.cpu.brand_string 2>/dev/null | awk -F: '{print $NF}' |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Core(TM) //; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
+CPU_MODEL=`awk -F '  ' '/Model name:/{print $NF}' $LSCPU |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
+[ -z "$CPU_MODEL" ] && CPU_MODEL=`cat /proc/cpuinfo 2>/dev/null |awk -F: '/^model name/{print $NF}' |uniq |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
+[ -z "$CPU_MODEL" ] && CPU_MODEL=`sysctl machdep.cpu.brand_string 2>/dev/null | awk -F: '{print $NF}' |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
 
 if echo "$CPU_MODEL" |grep -Eq 'MHz|GHz'; then
   CPU_FREQ=""
@@ -265,10 +265,10 @@ HD_SIZE=`lsblk -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,UUID" 2>/dev/null |
 [ -n "$HD_SIZE" ] && HD_SIZE=`echo $HD_SIZE |sed 's/GB$/G/; s/\.[0123]G/G/'`
 
 FS_TYPE=`df -Th / 2>/dev/null |awk '/\/$/{print $2}'`
-[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/'`
-[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/disk0/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
-[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/Apple_HFS.*disk1/{print $2}' | sed 's/Apple_HFS/hfs/'`
-[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list | awk '/disk1/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/'`
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/disk0/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/Apple_HFS.*disk1/{print $2}' | sed 's/Apple_HFS/hfs/'`
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/disk1/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
 
 
 #
