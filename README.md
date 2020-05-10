@@ -44,14 +44,20 @@ Examples on running on various Operating Systems:
 #### Windows (via WSL - Windows Subsystem for Linux)
 `DESKTOP-GTTHH7U: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'19, WSL/container, 4GB RAM, 1 x vCPU i7-6700 @ 3.40GHz, 64bit, 50G Disk/lxfs, Built Apr'20`
 
-#### Public Cloud - AWS / GCP
-`ip-172-31-44-12/EC2: Amazon Linux 2/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz, 64bit, 8G Disk/xfs, Built Apr'20`
+#### Public Cloud - AWS / GCP / Azure
+`ip-172-31-44-12/EC2: Amazon Linux 2/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz (Haswell), 64bit, 8G Disk/xfs, Built Apr'20`
 
-`ip-172-31-39-11/EC2: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz, 64bit, 7.7G Disk/ext4, Built Apr'20`
+`ip-172-31-39-11/EC2: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, Xen VM: 4.2.amazon HVM, 1GB RAM, 1 x vCPU E5-2676 v3 @ 2.40GHz (Haswell), 64bit, 7.7G Disk/ext4, Built Apr'20`
 
-`debian-gcp/US-EAST1-B: Linux Debian 9 Stretch/'20, KVM: Google Compute Engine, 592MB RAM, 1 x vCPU @ 2.30GHz, 64bit, 30G Disk/ext4, Built Apr'20`
+`ip-172-31-11-25/EC2: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, KVM: Amazon EC2 c5n.large, 5GB RAM, 2 x vCPU Xeon Platinum 8124M @ 3.00GHz (Skylake'15), 64bit, 8G Disk/ext4, Built Apr'20`
 
-`ubuntu-gcp/US-EAST1-B: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, KVM: Google Compute Engine, 575MB RAM, 1 x vCPU @ 2.00GHz, 64bit, 10G Disk/ext4, Built Apr'20`
+
+`debian-gcp/US-EAST1-B: Linux Debian 9 Stretch/'20, KVM: Google Compute Engine, 612MB RAM, 1 x vCPU @ 2.30GHz, 64bit, 30G Disk/ext4, Built Apr'20`
+
+`ubuntu-gcp/US-EAST1-B: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, KVM: Google Compute Engine, 575MB RAM, 1 x vCPU @ 2.00GHz (Skylake), 64bit, 10G Disk/ext4, Built Apr'20`
+
+
+`ubuntu-azure: Linux Ubuntu 18.04.4 LTS Bionic Beaver/'20, Hyper-V/VM: Hyper-V Microsoft VM, 1GB RAM, 1 x vCPU E5-2673 v4 @ 2.30GHz (Broadwell), 64bit, 30G+4G Disk/ext4, Built Apr'20`
 
 #### Chrome OS (via Chromebook Linux Shell):
 `penguin: Linux Debian 9 Stretch/'20, KVM: ChromiumOS crosvm, 3GB RAM, 2 x vCPU 06/4c 1.6GHz, 64bit, 7.7G Disk/btrfs, Built Feb'20`
