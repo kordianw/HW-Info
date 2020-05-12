@@ -87,7 +87,7 @@ if [ -z "$HW" ]; then
   fi
 fi
 
-[ -n "$HW" ] && HW="`echo $HW | sed 's/^ //; s/LENOVO/Lenovo/; s/TOSHIBA/Toshiba/; s/Hewlett Packard/HP/; s/DELL/Dell/; s/ASUSTeK COMPUTER INC\./Asus/; s/ASUSTeK/Asus/; s/ Corp\.//; s/ Inc\.//; s/^[0-9][0-9][^ ]* //; s/ [0-9]\.[0-9][^ ]* / /;'`"   # do not allow HW starting with digits
+[ -n "$HW" ] && HW="`echo $HW | sed 's/^ //; s/LENOVO/Lenovo/; s/TOSHIBA/Toshiba/; s/Hewlett Packard/HP/; s/DELL/Dell/; s/ASUSTeK COMPUTER INC\./Asus/; s/ASUSTeK/Asus/; s/Hyper-V Microsoft VM/Microsoft Hyper-V/; s/ Corp\.//; s/ Inc\.//; s/^[0-9][0-9][^ ]* //; s/ [0-9]\.[0-9][^ ]* / /;'`"   # do not allow HW starting with digits
 [ -n "$HW" ] && HW=": $HW"
 if [ -z "$HW" -a "$VM" = "VMware" ]; then
   VM="VM"
@@ -98,9 +98,12 @@ fi
 #
 # CPU MODEL, CORES & TYPE
 #
-CPU_MODEL=`awk -F '  ' '/Model name:/{print $NF}' $LSCPU |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
-[ -z "$CPU_MODEL" ] && CPU_MODEL=`cat /proc/cpuinfo 2>/dev/null |awk -F: '/^model name/{print $NF}' |uniq |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
-[ -z "$CPU_MODEL" ] && CPU_MODEL=`sysctl machdep.cpu.brand_string 2>/dev/null | awk -F: '{print $NF}' |sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //'`
+CPU_MODEL=`awk -F '  ' '/Model name:/{print $NF}' $LSCPU`
+[ -z "$CPU_MODEL" ] && CPU_MODEL=`cat /proc/cpuinfo 2>/dev/null |awk -F: '/^model name/{print $NF}' | uniq`
+[ -z "$CPU_MODEL" ] && CPU_MODEL=`sysctl machdep.cpu.brand_string 2>/dev/null | awk -F: '{print $NF}'`
+if [ -n "$CPU_MODEL" ]; then
+  CPU_MODEL=`echo "$CPU_MODEL" | sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Xeon(R) Gold/Xeon Gold/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/Intel(R) Pentium(R)/Pentium/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //; s/ $//; s/  / /g;'`
+fi
 
 if echo "$CPU_MODEL" |grep -Eq 'MHz|GHz'; then
   CPU_FREQ=""
@@ -123,6 +126,7 @@ if [ -n "$CPU_MODEL" ]; then
   # populate from: https://en.wikichip.org/wiki/intel/cpuid
   # years: https://en.wikipedia.org/wiki/List_of_Intel_CPU_microarchitectures
 
+  # Note that Skylake+Cascade Lake share family/model, so need to look at actual model to work it out:
   # cascade lake 2nd gen stuff from https://www.intel.com/content/www/us/en/products/docs/processors/xeon/2nd-gen-xeon-scalable-spec-update.html
   # 2nd gen xeon scalable cpus: cascade lake sku is 82xx, 62xx, 52xx, 42xx 32xx W-32xx  from https://www.intel.com/content/www/us/en/products/docs/processors/xeon/2nd-gen-xeon-scalable-spec-update.html
   # skylake 1st gen stuff from https://www.intel.com/content/www/us/en/processors/xeon/scalable/xeon-scalable-spec-update.html
@@ -147,14 +151,16 @@ if [ -n "$CPU_MODEL" ]; then
       dcd[14,1]="Penryn;07";               dcd[14,2]="Family 6 Model 29";
       dcd[15,1]="Harpertown, QC, Wolfdale, Yorkfield";  dcd[15,2]="Family 6 Model 23";
 
-      dcd[16,1]="Skylake;15";              dcd[16,2]="Family 6 Model 94";
-      dcd[17,1]="Skylake;15";              dcd[17,2]="Family 6 Model 78";
+      dcd[16,1]="Ivy Bridge;12";           dcd[16,2]="Family 6 Model 58";
 
-      dcd[18,1]="Kaby Lake;16";            dcd[18,2]="Family 6 Model 158";
-      dcd[19,1]="Kaby Lake;16";            dcd[19,2]="Family 6 Model 142";
+      dcd[17,1]="Skylake;15";              dcd[17,2]="Family 6 Model 94";
+      dcd[18,1]="Skylake;15";              dcd[18,2]="Family 6 Model 78";
 
-      dcd[20,1]="Ice Lake;19";             dcd[20,2]="Family 6 Model 126";
-      dcd[21,1]="Ice Lake;19";             dcd[21,2]="Family 6 Model 125";
+      dcd[19,1]="Kaby Lake;16";            dcd[19,2]="Family 6 Model 158";
+      dcd[20,1]="Kaby Lake;16";            dcd[20,2]="Family 6 Model 142";
+
+      dcd[21,1]="Ice Lake;19";             dcd[21,2]="Family 6 Model 126";
+      dcd[22,1]="Ice Lake;19";             dcd[22,2]="Family 6 Model 125";
 
       str = "Family " fam " Model " mod;
       #printf("str= %s\n", str);
