@@ -324,7 +324,9 @@ if [ -n "$IP" ]; then
   [ -z "$DNS_NAME" ] && DNS_NAME=`host "$IP" 2>/dev/null |awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}'`
 
   if [ -n "$DNS_NAME" -a "$DNS_NAME" != "$HOST" -a "$DNS_NAME" != "localhost" ]; then
-    HOST_EXTRA=" ($DNS_NAME)"
+    DNS_NAME_LC=`echo $DNS_NAME | tr 'A-Z' 'a-z'`
+    HOST_LC=`echo $HOST | tr 'A-Z' 'a-z'`
+    [ "$DNS_NAME_LC" != "$HOST_LC" ] && HOST_EXTRA=" ($DNS_NAME)"
   fi
 fi
 
