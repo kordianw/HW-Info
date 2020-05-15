@@ -330,11 +330,67 @@ if [ -n "$IP" ]; then
   fi
 fi
 
+[ -z "$VM" ] && VM="BareMetal"
+if [ -s /sys/class/dmi/id/chassis_type ]; then
+  CHASSIS_TYPE=`cat /sys/class/dmi/id/chassis_type`
+  case $CHASSIS_TYPE in
+    3) SYS_TYPE="Desktop"
+    ;;
+    4) SYS_TYPE="Low Profile Desktop"
+    ;;
+    5) SYS_TYPE="Pizza Box"
+    ;;
+    6) SYS_TYPE="Mini Tower"
+    ;;
+    7) SYS_TYPE="Tower"
+    ;;
+    8) SYS_TYPE="Portable"
+    ;;
+    9) SYS_TYPE="Laptop"
+    ;;
+    10) SYS_TYPE="Notebook"
+    ;;
+    11) SYS_TYPE="Hand Held"
+    ;;
+    12) SYS_TYPE="Docking Station"
+    ;;
+    13) SYS_TYPE="All in One"
+    ;;
+    14) SYS_TYPE="Sub Notebook"
+    ;;
+    15) SYS_TYPE="Space-Saving"
+    ;;
+    16) SYS_TYPE="Lunch Box"
+    ;;
+    17) SYS_TYPE="Main System Chassis"
+    ;;
+    18) SYS_TYPE="Expansion Chassis"
+    ;;
+    19) SYS_TYPE="SubChassis"
+    ;;
+    20) SYS_TYPE="Bus Expansion Chassis"
+    ;;
+    21) SYS_TYPE="Peripheral Chassis"
+    ;;
+    22) SYS_TYPE="Storage Chassis"
+    ;;
+    23) SYS_TYPE="Rack Mount Chassis"
+    ;;
+    24) SYS_TYPE="Sealed-Case PC"
+    ;;
+  esac
+
+  # fall-back
+  if [ -z "$SYS_TYPE" ]; then
+    [ -f /sys/module/battery/initstate ] || [ -d /proc/acpi/battery/BAT0 ] && SYS_TYPE="Laptop"
+  fi
+  [ -n "$SYS_TYPE" ] && SYS_TYPE=" $SYS_TYPE"
+fi
+
 #
 # /FINAL PRINT/
 #
-[ -z "$VM" ] && VM="BareMetal"
-echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $VM$HW, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE Disk/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/'
+echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $VM$SYS_TYPE$HW, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE Disk/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/'
 
 # clean-up
 rm -f $LSCPU
