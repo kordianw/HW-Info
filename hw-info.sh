@@ -382,7 +382,7 @@ if [ -s /sys/class/dmi/id/chassis_type ]; then
 
   # fall-back
   if [ -z "$SYS_TYPE" ]; then
-    [ -f /sys/module/battery/initstate ] || [ -d /proc/acpi/battery/BAT0 ] && SYS_TYPE="Laptop"
+    [ -f /sys/module/battery/initstate -o -d /proc/acpi/battery/BAT0 -o -L /sys/class/power_supply/BAT0 ] && SYS_TYPE="Laptop"
   fi
   [ -n "$SYS_TYPE" ] && SYS_TYPE=" $SYS_TYPE"
 fi
