@@ -265,14 +265,34 @@ BIT_TYPE=`uname -m | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/ar
 
 #
 # DISK SIZE & FS TYPE
+# - we also work out if it's an SSD or a HDD
 # - we exclude anything in MB range, shoul be GB or higher
 #
-HD_SIZE=`lsblk -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,UUID" 2>/dev/null |awk '/^(sd|vd|xvd|nvme|mmcblk|hd)/{print $4}' |egrep -v "K$|M$" |sed 's/\([0-9]\)\([A-Z]\)/\1 \2/' |awk '{ printf("%.0f%s\n", $1,$2) }' |head -3 |xargs |sed 's/ /+/g'`
+HD_SIZE=`lsblk -d -e 1,7 -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,TYPE" 2>/dev/null |awk '/^(sd|vd|xvd|nvme|mmcblk|hd).* disk$/{print $4}' |egrep -v "K$|M$" |sed 's/\([0-9]\)\([A-Z]\)/\1 \2/' |awk '{ printf("%.0f%s\n", $1,$2) }' |head -3 |xargs |sed 's/ /+/g'`
 [ -z "$HD_SIZE" -a -x "/usr/sbin/diskutil" ] && HD_SIZE=`diskutil list 2>/dev/null | awk '/:.*disk0$/{print $3$4}' |sed 's/^\*//;'`
 [ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs' |awk '/[0-9]/{print $2}'| grep -v "M$" |xargs |sed 's/ /+/g; s/Gi/GB/'`
 [ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs' |awk '/[0-9]/{print $2}'| xargs |sed 's/ /+/g; s/Gi/GB/'`
 [ -n "$HD_SIZE" ] && HD_SIZE=`echo $HD_SIZE |sed 's/GB$/G/; s/\.[0123]G/G/'`
 
+# SSD or HDD?
+if [ "`lsblk -d -e 1,7 -o NAME,TYPE 2>/dev/null |grep disk | wc -l`" = 1 ]; then
+  if lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | grep disk| egrep -q "mmcblk.* 0 "; then
+    HD_TYPE_SDD="SDHC"
+  elif lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | grep disk| egrep -q "nvme.* 0 "; then
+    HD_TYPE_SDD="NVMe SSD"
+  fi
+fi
+[ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | awk '/^(sd|vd|xvd|nvme|mmcblk|hd).* disk$/{print $2}' | sed 's/^1$/HDD/; s/^0$/SSD/' |sort |uniq |xargs |sed 's/ /+/g;'`
+[ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`diskutil info disk0 2>/dev/null | awk '/Solid State/{print $NF}' | sed 's/Yes/SSD/; s/No/HDD/'`
+if which wmic >&/dev/null; then
+  [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`wmic diskdrive list 2>/dev/null |grep PHYSICALDRIVE0 |grep -ci SSD | sed 's/^1$/SSD/; s/^0$/HDD/'`
+  [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`wmic diskdrive get Caption, MediaType, Index, InterfaceType 2>/dev/null |egrep -v 'USB|External' | grep " 0 " |grep -ci SSD | sed 's/^1$/SSD/; s/^0$/HDD/'`
+fi
+
+HD_TYPE="Disk"
+[ -n "$HD_TYPE_SDD" ] && HD_TYPE=$HD_TYPE_SDD
+
+# FS Type?
 FS_TYPE=`df -Th / 2>/dev/null |awk '/\/$/{print $2}'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/disk0/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
@@ -390,7 +410,7 @@ fi
 #
 # /FINAL PRINT/
 #
-echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $VM$SYS_TYPE$HW, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE Disk/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/VM Desktop/VM/;'
+echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $VM$SYS_TYPE$HW, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE $HD_TYPE/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/VM Desktop/VM/;'
 
 # clean-up
 rm -f $LSCPU
