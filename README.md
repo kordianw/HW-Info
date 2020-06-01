@@ -16,6 +16,7 @@ Provides the following information as a 1-liner:
 - CPU Architecture (eg: Haswell, Skylake, Ice Lake, etc)
 - 32bit or 64bit system?
 - Local Disk sizes (in human friendly format)
+- Is it a HDD (rotational/spinning disk/media) or SSD (flash) disk (or NVMe SSD)
 - FS type (eg: ext4, ntfs, btrfs)
 - When was the OS built? (based on dates of some key root files)
 
