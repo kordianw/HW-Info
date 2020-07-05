@@ -285,6 +285,8 @@ fi
 [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | awk '/^(sd|vd|xvd|nvme|mmcblk|hd).* disk$/{print $2}' | sed 's/^1$/HDD/; s/^0$/SSD/' |sort |uniq |xargs |sed 's/ /+/g;'`
 [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`diskutil info disk0 2>/dev/null | awk '/Solid State/{print $NF}' | sed 's/Yes/SSD/; s/No/HDD/'`
 if which wmic >&/dev/null; then
+  [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`wmic diskdrive list 2>/dev/null |grep PHYSICALDRIVE0 |grep -ci NVME | sed 's/^1$/NVMe SSD/; s/^0$/HDD/'`
+  [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`wmic diskdrive get Caption, MediaType, Index, InterfaceType 2>/dev/null |egrep -v 'USB|External' | grep " 0 " |grep -ci NVME | sed 's/^1$/NVMe SSD/; s/^0$/HDD/'`
   [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`wmic diskdrive list 2>/dev/null |grep PHYSICALDRIVE0 |grep -ci SSD | sed 's/^1$/SSD/; s/^0$/HDD/'`
   [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=`wmic diskdrive get Caption, MediaType, Index, InterfaceType 2>/dev/null |egrep -v 'USB|External' | grep " 0 " |grep -ci SSD | sed 's/^1$/SSD/; s/^0$/HDD/'`
 fi
