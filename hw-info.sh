@@ -396,7 +396,7 @@ if [ -s /sys/class/dmi/id/chassis_type ]; then
     ;;
     22) SYS_TYPE="Storage Chassis"
     ;;
-    23) SYS_TYPE="Rack Mount Chassis"
+    23) SYS_TYPE="Rack Mount"
     ;;
     24) SYS_TYPE="Sealed-Case PC"
     ;;
