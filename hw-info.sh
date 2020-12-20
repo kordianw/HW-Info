@@ -254,7 +254,7 @@ if [ "$OS_TYPE" = "MacOS (Darwin)" -o "$OS_TYPE" = "MacOS" -o "$OS_TYPE" = "Darw
   fi
 fi
 
-OS_YEAR=`uname -v |grep -Eo "[12][09][0-9]{2}" |sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/"`
+OS_YEAR=`uname -v |grep -Eo "[12][09][0-9]{2}" |tail -1 |sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/"`
 
 
 #
