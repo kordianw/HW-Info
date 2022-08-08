@@ -1,9 +1,9 @@
 #!/bin/bash
 # Portable & simple HW-Info script - quickly & easily get an idea of the HW you're working on
 # - works on any OS that can run bash
-# - tested on Linux, MacOS & Cygwin
+# - tested on Linux, MacOS, AWS/GCP/Azure, Cygwin & WSL
 #
-# * By Kordian Witek <code [at] kordy.com>
+# * By Kordian W. <code [at] kordy.com>, January 2019
 #
 
 # DOCUMENTATION:
