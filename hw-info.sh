@@ -123,7 +123,7 @@ CPU_TYPE="CPU"
 
 # add CPU architecture information
 if [ -n "$CPU_MODEL" ]; then
-  # populate from: https://en.wikichip.org/wiki/intel/cpuid
+  # INTEL: populate from: https://en.wikichip.org/wiki/intel/cpuid
   # years: https://en.wikipedia.org/wiki/List_of_Intel_CPU_microarchitectures
 
   # Note that Skylake+Cascade Lake share family/model, so need to look at actual model to work it out:
@@ -196,7 +196,20 @@ if [ -n "$CPU_MODEL" ]; then
   }
 '`
   if [ -n "$CPU_NAME" ]; then
+    # INTEL
     CPU_MODEL=`echo "$CPU_MODEL ($CPU_NAME)" | sed "s/;/'/"`
+  else
+    # AMD
+    if echo "$CPU_MODEL" | grep -q 'AMD EPYC 7B13'; then
+      CPU_NAME="Milan'21"
+    elif echo "$CPU_MODEL" | grep -q 'AMD EPYC 7B12'; then
+      CPU_NAME="Rome'19"
+    fi
+
+    # AMD Results
+    if [ -n "$CPU_NAME" ]; then
+      CPU_MODEL=`echo "$CPU_MODEL ($CPU_NAME)" | sed "s/;/'/"`
+    fi
   fi
 fi
 
