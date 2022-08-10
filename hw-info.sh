@@ -199,6 +199,12 @@ if [ -n "$CPU_MODEL" ]; then
     # INTEL
     CPU_MODEL=`echo "$CPU_MODEL ($CPU_NAME)" | sed "s/;/'/"`
   else
+    #
+    # AMD: some of it is documented here:
+    #      https://cloud.google.com/compute/docs/cpu-platforms
+    #      https://en.wikipedia.org/wiki/Epyc
+    #
+
     # AMD
     if echo "$CPU_MODEL" | grep -q 'AMD EPYC 7B13'; then
       CPU_NAME="Milan'21"
@@ -208,7 +214,7 @@ if [ -n "$CPU_MODEL" ]; then
 
     # AMD Results
     if [ -n "$CPU_NAME" ]; then
-      CPU_MODEL=`echo "$CPU_MODEL ($CPU_NAME)" | sed "s/;/'/"`
+      CPU_MODEL="$CPU_MODEL ($CPU_NAME)"
     fi
   fi
 fi
