@@ -3,6 +3,9 @@
 # - works on any OS that can run bash
 # - tested on Linux, MacOS, AWS/GCP/Azure, Cygwin & WSL
 #
+# RUN DIRECTLY FROM GITHUB:
+# # curl -s https://raw.githubusercontent.com/kordianw/HW-Info/master/hw-info.sh | bash
+#
 # * By Kordian W. <code [at] kordy.com>, January 2019
 #
 
@@ -316,9 +319,10 @@ HD_TYPE="Disk"
 # FS Type?
 FS_TYPE=`df -Th / 2>/dev/null |awk '/\/$/{print $2}'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/'`
-[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/disk0/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/disk0/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/' | egrep -v 'apfs_Recovery|apfs_IŚĆ'`
+
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/Apple_HFS.*disk1/{print $2}' | sed 's/Apple_HFS/hfs/'`
-[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/disk1/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/'`
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/disk1/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/' | egrep -v 'apfs_Recovery|apfs_IŚĆ'`
 
 
 #
