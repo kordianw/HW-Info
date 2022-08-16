@@ -106,14 +106,17 @@ CPU_MODEL=`awk -F '  ' '/Model name:/{print $NF}' $LSCPU`
 [ -z "$CPU_MODEL" ] && CPU_MODEL=`sysctl machdep.cpu.brand_string 2>/dev/null | awk -F: '{print $NF}'`
 if [ -n "$CPU_MODEL" ]; then
   CPU_MODEL=`echo "$CPU_MODEL" | sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Xeon(R) Gold/Xeon Gold/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/Intel(R) Pentium(R)/Pentium/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //; s/ $//; s/  / /g;'`
+
+  # special translations for Google Cloud (GCP) cases
+  CPU_MODEL=`echo "$CPU_MODEL" | sed 's/AMD EPYC 7B12/AMD EPYC 7B12\/7742/'`
 fi
 
 if echo "$CPU_MODEL" |grep -Eq 'MHz|GHz'; then
   CPU_FREQ=""
 else
-  CPU_FREQ=`awk '/CPU max MHz/{printf("%.1fGHz", $NF/1000)}' $LSCPU`
-  [ -z "$CPU_FREQ" ] && CPU_FREQ=`awk '/CPU MHz/{printf("%.1fGHz", $NF/1000)}' $LSCPU`
-  [ -n "$CPU_FREQ" ] && CPU_FREQ=" $CPU_FREQ"
+  CPU_FREQ=`awk '/CPU max MHz/{printf("%.2fGHz", $NF/1000)}' $LSCPU`
+  [ -z "$CPU_FREQ" ] && CPU_FREQ=`awk '/CPU MHz/{printf("%.2fGHz", $NF/1000)}' $LSCPU`
+  [ -n "$CPU_FREQ" ] && CPU_FREQ=" `echo $CPU_FREQ | sed 's/0GHz/GHz/'`"
 fi
 
 NO_OF_CPU=`awk '/^CPU\(s\):/{print $NF}' $LSCPU`
@@ -211,7 +214,7 @@ if [ -n "$CPU_MODEL" ]; then
     # AMD
     if echo "$CPU_MODEL" | grep -q 'AMD EPYC 7B13'; then
       CPU_NAME="Milan'21"
-    elif echo "$CPU_MODEL" | grep -q 'AMD EPYC 7B12'; then
+    elif echo "$CPU_MODEL" | egrep -q 'AMD EPYC 7B12|AMD EPYC 7742'; then
       CPU_NAME="Rome'19"
     fi
 
