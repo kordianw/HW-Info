@@ -113,10 +113,11 @@ fi
 
 if echo "$CPU_MODEL" |grep -Eq 'MHz|GHz'; then
   CPU_FREQ=""
+  CPU_MODEL="`echo $CPU_MODEL | sed 's/\(\.[0-9]\)0GHz/\1GHz/'`"
 else
   CPU_FREQ=`awk '/CPU max MHz/{printf("%.2fGHz", $NF/1000)}' $LSCPU`
   [ -z "$CPU_FREQ" ] && CPU_FREQ=`awk '/CPU MHz/{printf("%.2fGHz", $NF/1000)}' $LSCPU`
-  [ -n "$CPU_FREQ" ] && CPU_FREQ=" `echo $CPU_FREQ | sed 's/0GHz/GHz/'`"
+  [ -n "$CPU_FREQ" ] && CPU_FREQ=" `echo $CPU_FREQ | sed 's/\(\.[0-9]\)0GHz/\1GHz/'`"
 fi
 
 NO_OF_CPU=`awk '/^CPU\(s\):/{print $NF}' $LSCPU`
