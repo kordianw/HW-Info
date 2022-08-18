@@ -322,6 +322,9 @@ HD_TYPE="Disk"
 
 # FS Type?
 FS_TYPE=`df -Th / 2>/dev/null |awk '/\/$/{print $2}'`
+if [ "$FS_TYPE" = "overlay" ]; then
+  FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x overlay /root /boot /usr 2>/dev/null |awk '/ \//{print $2}' |grep -v overlay | sort -u |head`
+fi
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/'`
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/disk0/{print $2}' |grep APFS | sed 's/Apple_APFS/apfs/' | egrep -v 'apfs_Recovery|apfs_IŚĆ'`
 
