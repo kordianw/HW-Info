@@ -4,7 +4,7 @@
 # - tested on Linux, MacOS, AWS/GCP/Azure, Cygwin & WSL
 #
 # RUN DIRECTLY FROM GITHUB:
-# # curl -sSL https://github.com/kordianw/HW-Info/raw/master/hw-info.sh | bash
+# $ curl -sSL https://github.com/kordianw/HW-Info/raw/master/hw-info.sh | bash
 #
 # * By Kordian W. <code [at] kordy.com>, January 2019
 #
