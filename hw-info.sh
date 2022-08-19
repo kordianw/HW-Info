@@ -296,8 +296,8 @@ BIT_TYPE=`uname -m | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/ar
 #
 HD_SIZE=`lsblk -d -e 1,7 -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,TYPE" 2>/dev/null |awk '/^(sd|vd|xvd|nvme|mmcblk|hd).* disk$/{print $4}' |egrep -v "K$|M$" |sed 's/\([0-9]\)\([A-Z]\)/\1 \2/' |awk '{ printf("%.0f%s\n", $1,$2) }' |head -3 |xargs |sed 's/ /+/g'`
 [ -z "$HD_SIZE" -a -x "/usr/sbin/diskutil" ] && HD_SIZE=`diskutil list 2>/dev/null | awk '/:.*disk0$/{print $3$4}' |sed 's/^\*//;'`
-[ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs' |awk '/[0-9]/{print $2}'| grep -v "M$" |xargs |sed 's/ /+/g; s/Gi/GB/'`
-[ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs' |awk '/[0-9]/{print $2}'| xargs |sed 's/ /+/g; s/Gi/GB/'`
+[ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' |awk '/[0-9]/{print $2}'| grep -v "M$" |xargs |sed 's/ /+/g; s/Gi/GB/'`
+[ -z "$HD_SIZE" ] && HD_SIZE=`df -hl 2>/dev/null |egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' |awk '/[0-9]/{print $2}'| xargs |sed 's/ /+/g; s/Gi/GB/'`
 [ -n "$HD_SIZE" ] && HD_SIZE=`echo $HD_SIZE |sed 's/GB$/G/; s/\.[0123]G/G/'`
 
 # SSD or HDD?
@@ -321,11 +321,11 @@ HD_TYPE="Disk"
 [ -n "$HD_TYPE_SDD" ] && HD_TYPE=$HD_TYPE_SDD
 
 # FS Type?
-FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' |awk '/\/$/{print $2}' | sort -u |xargs |sed 's/ /+/g'`
-[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
-[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x overlay / /root /usr 2>/dev/null |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
-[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x overlay /home 2>/dev/null |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
-[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x overlay 2>/dev/null |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
+FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' |awk '/\/$/{print $2}' | sort -u |xargs |sed 's/ /+/g'`
+[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
+[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x overlay / /root /usr 2>/dev/null |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
+[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x overlay /home 2>/dev/null |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
+[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x overlay 2>/dev/null |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
 
 # Apple
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/'`
