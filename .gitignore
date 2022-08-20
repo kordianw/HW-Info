@@ -22,12 +22,14 @@ _gsdata_
 # Compiled source
 *.pyc
 *.pyo
+*.pyd
 *.com
 *.class
 *.dll
 *.exe
 *.o
 *.so
+__pycache__
 
 # Packages
 *.7z
