@@ -1,2 +1,2 @@
 #!/bin/sh
-curl -s https://raw.githubusercontent.com/kordianw/HW-Info/master/hw-info.sh | bash
+curl -sSL https://github.com/kordianw/HW-Info/raw/master/hw-info.sh | bash
