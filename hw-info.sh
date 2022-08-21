@@ -97,6 +97,13 @@ if [ -z "$HW" -a "$VM" = "VMware" ]; then
   HW=": VMware"
 fi
 
+# Kernel type, append to HW in the end
+KERNEL_TYPE=""
+KTYPE=`uname -r 2>/dev/null | egrep '^.*-[a-z][a-z]*$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/'`
+if [ -n "$KTYPE" ]; then
+  KERNEL_TYPE="/`echo $KTYPE | tr 'a-z' 'A-Z'`"
+fi
+
 
 #
 # CPU MODEL, CORES & TYPE
@@ -257,6 +264,7 @@ OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 
 OS_VERSION=`cat /etc/redhat-release 2>/dev/null |awk '{print $(NF-1)}'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/*release* 2>/dev/null |sort |uniq |awk -F= '/^(NAME|VERSION)=/{print $NF}' |sed 's/"//g; s#GNU/Linux##; s/ (\(.*\))/ \u\1/' |xargs`
+[ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/issue 2>/dev/null |sed 's/^Welcome to //i' | awk '{print $1,$2}' | xargs | sed 's/^ //; s/ $//'`
 [ -z "$OS_VERSION" -a -x "/usr/bin/sw_vers" ] && OS_VERSION=`sw_vers -productVersion 2>/dev/null | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" -a -x "/usr/sbin/system_profiler" ] && OS_VERSION=`system_profiler SPSoftwareDataType 2>/dev/null | awk -F: '/System Version:/{print $NF}' | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`uname -r |sed 's/(.*//'`
@@ -454,7 +462,7 @@ fi
 #
 # /FINAL PRINT/
 #
-echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $VM$SYS_TYPE$HW, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE $HD_TYPE/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/VM Desktop/VM/; s/, Built *$//'
+echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $VM$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE $HD_TYPE/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/VM Desktop/VM/; s/, Built *$//'
 
 # clean-up
 rm -f $LSCPU
