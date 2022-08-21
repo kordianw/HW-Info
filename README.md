@@ -1,5 +1,6 @@
 # HW-Info
 Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, Windows, Chromebook, etc)
+... delivered as a 1-liner, eg: useful as part of logging into any machine, such as the one in the public cloud.
 
 ## Description
 Provides the following information as a 1-liner:
@@ -23,7 +24,7 @@ Provides the following information as a 1-liner:
 ## How to run directly
 You can run this directly from GitHub:
 
-`$ curl -s https://raw.githubusercontent.com/kordianw/HW-Info/master/hw-info.sh | bash`
+`$ curl -sSL https://raw.githubusercontent.com/kordianw/HW-Info/master/hw-info.sh | bash`
 
 ## Examples
 Examples on running on various Operating Systems:
