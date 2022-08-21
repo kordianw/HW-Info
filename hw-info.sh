@@ -51,9 +51,11 @@ if [ -z "$VM" ]; then
 fi
 [ -z "$VM" ] && dmesg 2>/dev/null |grep -qi 'vmware' && VM="VMware"
 [ -z "$VM" ] && dmesg 2>/dev/null |grep -q 'KVM' && VM="KVM"
+[ -z "$VM" ] && dmesg 2>/dev/null |grep -q 'gVisor' && VM="gVisor"
 [ -z "$VM" -a -s /var/log/dmesg ] && grep -qi 'vmware' /var/log/dmesg && VM="VMware"
 [ -z "$VM" -a -s /var/log/dmesg ] && grep -q 'KVM' /var/log/dmesg && VM="KVM"
 [ -z "$VM" -a -s /var/log/dmesg ] && grep -qi 'xen' /var/log/dmesg && VM="Xen"
+[ -z "$VM" -a -s /var/log/dmesg ] && grep -q 'gVisor' /var/log/dmesg && VM="gVisor"
 [ -z "$VM" -a -e /proc/cpuinfo ] && grep -q "^[Ff]lags.*hypervisor" /proc/cpuinfo && VM="VM"
 
 if [ -n "$VM" ]; then
