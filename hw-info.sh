@@ -101,7 +101,7 @@ fi
 
 # Kernel type, append to HW in the end
 KERNEL_TYPE=""
-KTYPE=`uname -r 2>/dev/null | egrep '^.*-[a-z][a-z]*$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/'`
+KTYPE=`uname -r 2>/dev/null | egrep '^.*-[a-z][a-z]*$' |egrep -v '\-(generic)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/'`
 if [ -n "$KTYPE" ]; then
   KERNEL_TYPE="/`echo $KTYPE | tr 'a-z' 'A-Z'`"
 fi
@@ -394,7 +394,7 @@ fi
 [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
 if [ -n "$IP" ]; then
-  DNS_NAME=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}' | sed 's/[^A-Za-z0-9_-]*//g'`
+  DNS_NAME=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}' | sed 's/[^A-Za-z0-9_-]*//g'| tail -1`
   [ -z "$DNS_NAME" ] && DNS_NAME=`host "$IP" 2>/dev/null |awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $1}'`
 
   if [ -n "$DNS_NAME" -a "$DNS_NAME" != "$HOST" -a "$DNS_NAME" != "localhost" ]; then
