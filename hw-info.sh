@@ -268,6 +268,7 @@ OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 [ -s /etc/centos-release ] && OS_TYPE="Linux CentOS"
 [ -s /etc/rocky-release ] && OS_TYPE="Rocky Linux"
 [ -s /etc/gentoo-release ] && OS_TYPE="Gentoo Linux"
+[ -s /etc/alpine-release ] && OS_TYPE="Alpine Linux"
 
 if [ -s /etc/redhat-release -a ! -s /etc/fedora-release -a ! -s /etc/centos-release -a ! -s /etc/rocky-release ]; then
   OS_VERSION=`cat /etc/redhat-release 2>/dev/null |awk '{print $(NF-1)}'`
@@ -279,6 +280,8 @@ elif [ -s /etc/rocky-release ]; then
   OS_VERSION=`cat /etc/rocky-release 2>/dev/null |awk '{print $4,$5,$6,$7}' | xargs | sed 's/ release / /'`
 elif [ -s /etc/gentoo-release ]; then
   OS_VERSION=`cat /etc/gentoo-release 2>/dev/null |awk '{print $NF}' | xargs`
+elif [ -s /etc/alpine-release ]; then
+  OS_VERSION=`cat /etc/alpine-release 2>/dev/null |awk '{print $NF}' | xargs`
 fi
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/*release* 2>/dev/null |sort |uniq |awk -F= '/^(NAME|VERSION)=/{print $NF}' |sed 's/"//g; s#GNU/Linux##; s/ (\(.*\))/ \u\1/' |xargs`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/issue 2>/dev/null |sed 's/^Welcome to //i' | awk '{print $1,$2}' | xargs | sed 's/^ //; s/ $//'`
@@ -386,6 +389,8 @@ FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse
 [ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay /home 2>/dev/null |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
 [ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
 [ -z "$FS_TYPE" ] && FS_TYPE=`df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup 2>/dev/null |awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
+[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th / 2>/dev/null |egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
+[ -z "$FS_TYPE" ] && FS_TYPE=`df -Th 2>/dev/null |egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/ \//{print $2}' | sort -u |xargs |sed 's/ /+/g'`
 
 # Apple
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=`diskutil list 2>/dev/null | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/'`
@@ -418,7 +423,8 @@ DOMAIN=`domainname 2>/dev/null |grep -v "none" | sed 's/\..*//'`
 [ -n "$DOMAIN" -a "$DOMAIN" = "localdomain" ] && DOMAIN=
 if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
   [ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^::1 //;' | awk '{print $1}' | grep -v 127.0.0.1`
-  [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
+  [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127\.0\.|192\.168\./{print $2}' |tail -1 | sed 's/^.*://'`
+  [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127\.0\./{print $2}' |tail -1 | sed 's/^.*://'`
   [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
   if [ -n "$IP" ]; then
     DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $2}' | sed 's/[^A-Za-z0-9_-]*//g'`
@@ -513,9 +519,11 @@ if [ -s /sys/class/dmi/id/chassis_type ]; then
 fi
 
 # Tribal Knowledge:
-# - all LINODE HDs are now SSD (KVM can't detect that)
+# - all LINODE HDs are now SSD (KVM can't detect that and also for Alpine Linux)
 if echo "$DOMAIN" | grep -qi linode; then
   if [ "$VM" = "KVM" -a "$HD_TYPE" = "HDD" ]; then
+    HD_TYPE="SSD"
+  elif [ "$VM" = "VMware" -a "$HD_TYPE" = "HDD" ] && echo "$HW" | grep -q 'QEMU Standard PC'; then
     HD_TYPE="SSD"
   fi
 fi
