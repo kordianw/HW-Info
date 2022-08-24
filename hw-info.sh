@@ -262,11 +262,12 @@ fi
 #
 OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 [ -z "$OS_TYPE" ] && OS_TYPE=`uname -s 2>/dev/null | sed 's/^Darwin$/MacOS (Darwin)/'`
+[ -s /etc/debian-release ] && OS_TYPE="Debian Linux"
 [ -s /etc/redhat-release ] && OS_TYPE="Linux RHEL"
 [ -s /etc/fedora-release ] && OS_TYPE="Fedora Linux"
 [ -s /etc/centos-release ] && OS_TYPE="Linux CentOS"
 [ -s /etc/rocky-release ] && OS_TYPE="Rocky Linux"
-[ -s /etc/debian-release ] && OS_TYPE="Debian Linux"
+[ -s /etc/gentoo-release ] && OS_TYPE="Gentoo Linux"
 
 if [ -s /etc/redhat-release -a ! -s /etc/fedora-release -a ! -s /etc/centos-release -a ! -s /etc/rocky-release ]; then
   OS_VERSION=`cat /etc/redhat-release 2>/dev/null |awk '{print $(NF-1)}'`
@@ -276,6 +277,8 @@ elif [ -s /etc/centos-release ]; then
   OS_VERSION=`cat /etc/centos-release 2>/dev/null |awk '{print $2,$3,$4,$5}' | xargs | sed 's/ release / /'`
 elif [ -s /etc/rocky-release ]; then
   OS_VERSION=`cat /etc/rocky-release 2>/dev/null |awk '{print $4,$5,$6,$7}' | xargs | sed 's/ release / /'`
+elif [ -s /etc/gentoo-release ]; then
+  OS_VERSION=`cat /etc/gentoo-release 2>/dev/null |awk '{print $NF}' | xargs`
 fi
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/*release* 2>/dev/null |sort |uniq |awk -F= '/^(NAME|VERSION)=/{print $NF}' |sed 's/"//g; s#GNU/Linux##; s/ (\(.*\))/ \u\1/' |xargs`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/issue 2>/dev/null |sed 's/^Welcome to //i' | awk '{print $1,$2}' | xargs | sed 's/^ //; s/ $//'`
