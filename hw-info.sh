@@ -263,19 +263,20 @@ fi
 OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 [ -z "$OS_TYPE" ] && OS_TYPE=`uname -s 2>/dev/null | sed 's/^Darwin$/MacOS (Darwin)/'`
 [ -s /etc/redhat-release ] && OS_TYPE="Linux RHEL"
-[ -s /etc/fedora-release ] && OS_TYPE="Linux Fedora"
+[ -s /etc/fedora-release ] && OS_TYPE="Fedora Linux"
 [ -s /etc/centos-release ] && OS_TYPE="Linux CentOS"
 [ -s /etc/rocky-release ] && OS_TYPE="Rocky Linux"
 [ -s /etc/debian-release ] && OS_TYPE="Debian Linux"
 
-if [ -s /etc/redhat-release -a ! -s /etc/centos-release -a ! -s /etc/rocky-release ]; then
+if [ -s /etc/redhat-release -a ! -s /etc/fedora-release -a ! -s /etc/centos-release -a ! -s /etc/rocky-release ]; then
   OS_VERSION=`cat /etc/redhat-release 2>/dev/null |awk '{print $(NF-1)}'`
+elif [ -s /etc/fedora-release ]; then
+  OS_VERSION=`cat /etc/fedora-release 2>/dev/null |awk '{print $3}'`
 elif [ -s /etc/centos-release ]; then
   OS_VERSION=`cat /etc/centos-release 2>/dev/null |awk '{print $2,$3,$4,$5}' | xargs | sed 's/ release / /'`
 elif [ -s /etc/rocky-release ]; then
   OS_VERSION=`cat /etc/rocky-release 2>/dev/null |awk '{print $4,$5,$6,$7}' | xargs | sed 's/ release / /'`
 fi
-[ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/fedora-release 2>/dev/null |awk '{print $3}'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/*release* 2>/dev/null |sort |uniq |awk -F= '/^(NAME|VERSION)=/{print $NF}' |sed 's/"//g; s#GNU/Linux##; s/ (\(.*\))/ \u\1/' |xargs`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/issue 2>/dev/null |sed 's/^Welcome to //i' | awk '{print $1,$2}' | xargs | sed 's/^ //; s/ $//'`
 [ -z "$OS_VERSION" -a -x "/usr/bin/sw_vers" ] && OS_VERSION=`sw_vers -productVersion 2>/dev/null | sed 's/^ //; s/ (.*$//'`
@@ -392,8 +393,9 @@ BUILT=`ls -lact --full-time /etc 2>/dev/null |awk 'END {print $6}'`
 HOST=`uname -n |sed 's/\..*//'`
 DOMAIN=`domainname 2>/dev/null |grep -v "none" | sed 's/\..*//'`
 [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ] && DOMAIN=`uname -n | sed 's/\.[a-z0-9-]*\.com//; s/^[a-z0-9-]*\.\([a-z0-9-]*\)/\1/; s/\..*//'`
+[ -n "$DOMAIN" -a "$DOMAIN" = "localdomain" ] && DOMAIN=
 if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
-  [ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^::1 //;' | awk '{print $1}'`
+  [ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^::1 //;' | awk '{print $1}' | grep -v 127.0.0.1`
   [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
   [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
   if [ -n "$IP" ]; then
@@ -415,7 +417,8 @@ elif [ -n "$DOMAIN" ]; then
   [ "$DOMAIN" = "/LOCALDOMAIN" -o "$DOMAIN" = "/LOCALHOST" ] && DOMAIN=""
 fi
 
-[ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^::1 //;'| awk '{print $1}'`
+# alternative DNS name which is different than the hostname
+[ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^::1 //;'| awk '{print $1}' | grep -v 127.0.0.1`
 [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
