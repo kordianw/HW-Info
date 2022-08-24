@@ -290,7 +290,15 @@ elif echo "$OS_VERSION" | grep -q Ubuntu; then
   OS_VERSION=`echo $OS_VERSION | sed 's/LTS \([A-Z][a-z]* [A-Z][a-z]*\)$/LTS (\1)/; s/\([0-9]\) \([A-Z][a-z]* [A-Z][a-z]*\)$/\1 (\2)/;'`
 fi
 
+# MacOS releases: see here:
+# https://en.wikipedia.org/wiki/MacOS_version_history#Releases
 if [ "$OS_TYPE" = "MacOS (Darwin)" -o "$OS_TYPE" = "MacOS" -o "$OS_TYPE" = "Darwin" ]; then
+  if [[ $OSTYPE == darwin22* ]]; then
+    EXTRA_OS_INFO=' (Ventura)'
+  if [[ $OSTYPE == darwin21* ]]; then
+    EXTRA_OS_INFO=' (Monterey)'
+  if [[ $OSTYPE == darwin20* ]]; then
+    EXTRA_OS_INFO=' (Big Sur)'
   if [[ $OSTYPE == darwin19* ]]; then
     EXTRA_OS_INFO=' (Catalina)'
   elif [[ $OSTYPE == darwin18* ]]; then
