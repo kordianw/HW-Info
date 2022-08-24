@@ -423,6 +423,8 @@ DOMAIN=`domainname 2>/dev/null |grep -v "none" | sed 's/\..*//'`
 [ -n "$DOMAIN" -a "$DOMAIN" = "localdomain" ] && DOMAIN=
 if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
   [ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^::1 //;' | awk '{print $1}' | grep -v 127.0.0.1`
+  [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127\.0\.|192\.168\.|10\.0\.1/{print $2}' |tail -1 | sed 's/^.*://'`
+  [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127\.0\.|192\.168\.|10\.0\.0/{print $2}' |tail -1 | sed 's/^.*://'`
   [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127\.0\.|192\.168\./{print $2}' |tail -1 | sed 's/^.*://'`
   [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127\.0\./{print $2}' |tail -1 | sed 's/^.*://'`
   [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
