@@ -101,7 +101,7 @@ fi
 
 # Kernel type, append to HW in the end
 KERNEL_TYPE=""
-KTYPE=`uname -r 2>/dev/null | egrep '^.*-[a-z][a-z]*$' |egrep -v '\-(generic)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/'`
+KTYPE=`uname -r 2>/dev/null | egrep '^.*-[a-z][a-z]*$' |egrep -v '\-(generic|default)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/'`
 if [ -n "$KTYPE" ]; then
   KERNEL_TYPE="/`echo $KTYPE | tr 'a-z' 'A-Z'`"
 fi
@@ -110,7 +110,7 @@ fi
 #
 # CPU MODEL, CORES & TYPE
 #
-CPU_MODEL=`awk -F '  ' '/Model name:/{print $NF}' $LSCPU`
+CPU_MODEL=`awk -F '  ' '/Model name:/ && !/BIOS Model/{print $NF}' $LSCPU`
 [ -z "$CPU_MODEL" ] && CPU_MODEL=`cat /proc/cpuinfo 2>/dev/null |awk -F: '/^model name/{print $NF}' | uniq`
 [ -z "$CPU_MODEL" ] && CPU_MODEL=`sysctl machdep.cpu.brand_string 2>/dev/null | awk -F: '{print $NF}'`
 if [ -n "$CPU_MODEL" -a "$CPU_MODEL" = "unknown" ]; then
@@ -265,15 +265,29 @@ OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 [ -s /etc/redhat-release ] && OS_TYPE="Linux RHEL"
 [ -s /etc/fedora-release ] && OS_TYPE="Linux Fedora"
 [ -s /etc/centos-release ] && OS_TYPE="Linux CentOS"
+[ -s /etc/rocky-release ] && OS_TYPE="Rocky Linux"
 [ -s /etc/debian-release ] && OS_TYPE="Debian Linux"
 
-OS_VERSION=`cat /etc/redhat-release 2>/dev/null |awk '{print $(NF-1)}'`
-OS_VERSION=`cat /etc/fedora-release 2>/dev/null |awk '{print $3}'`
+if [ -s /etc/redhat-release -a ! -s /etc/centos-release -a ! -s /etc/rocky-release ]; then
+  OS_VERSION=`cat /etc/redhat-release 2>/dev/null |awk '{print $(NF-1)}'`
+elif [ -s /etc/centos-release ]; then
+  OS_VERSION=`cat /etc/centos-release 2>/dev/null |awk '{print $2,$3,$4,$5}' | xargs | sed 's/ release / /'`
+elif [ -s /etc/rocky-release ]; then
+  OS_VERSION=`cat /etc/rocky-release 2>/dev/null |awk '{print $4,$5,$6,$7}' | xargs | sed 's/ release / /'`
+fi
+[ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/fedora-release 2>/dev/null |awk '{print $3}'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/*release* 2>/dev/null |sort |uniq |awk -F= '/^(NAME|VERSION)=/{print $NF}' |sed 's/"//g; s#GNU/Linux##; s/ (\(.*\))/ \u\1/' |xargs`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/issue 2>/dev/null |sed 's/^Welcome to //i' | awk '{print $1,$2}' | xargs | sed 's/^ //; s/ $//'`
 [ -z "$OS_VERSION" -a -x "/usr/bin/sw_vers" ] && OS_VERSION=`sw_vers -productVersion 2>/dev/null | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" -a -x "/usr/sbin/system_profiler" ] && OS_VERSION=`system_profiler SPSoftwareDataType 2>/dev/null | awk -F: '/System Version:/{print $NF}' | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`uname -r |sed 's/(.*//'`
+
+# Debian & Ubuntu has a special format
+if echo "$OS_VERSION" |grep -q Debian; then
+  OS_VERSION=`echo $OS_VERSION | sed 's/\([0-9]\) \([A-Za-z]*\)/\1 "\l\2"/'`
+elif echo "$OS_VERSION" | grep -q Ubuntu; then
+  OS_VERSION=`echo $OS_VERSION | sed 's/LTS \([A-Z][a-z]* [A-Z][a-z]*\)$/LTS (\1)/; s/\([0-9]\) \([A-Z][a-z]* [A-Z][a-z]*\)$/\1 (\2)/;'`
+fi
 
 if [ "$OS_TYPE" = "MacOS (Darwin)" -o "$OS_TYPE" = "MacOS" -o "$OS_TYPE" = "Darwin" ]; then
   if [[ $OSTYPE == darwin19* ]]; then
@@ -471,6 +485,14 @@ if [ -s /sys/class/dmi/id/chassis_type ]; then
     [ -f /sys/module/battery/initstate -o -d /proc/acpi/battery/BAT0 -o -L /sys/class/power_supply/BAT0 ] && SYS_TYPE="Laptop"
   fi
   [ -n "$SYS_TYPE" ] && SYS_TYPE=" $SYS_TYPE"
+fi
+
+# Tribal Knowledge:
+# - all LINODE HDs are now SSD (KVM can't detect that)
+if echo "$DOMAIN" | grep -qi linode; then
+  if [ "$VM" = "KVM" -a "$HD_TYPE" = "HDD" ]; then
+    HD_TYPE="SSD"
+  fi
 fi
 
 #
