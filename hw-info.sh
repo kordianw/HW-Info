@@ -117,7 +117,7 @@ if [ -n "$CPU_MODEL" -a "$CPU_MODEL" = "unknown" ]; then
   CPU_MODEL=`cat /proc/cpuinfo 2>/dev/null |awk -F: '/^vendor_id/{print $NF}' | uniq | sed 's/GenuineIntel/Intel/'`
 fi
 if [ -n "$CPU_MODEL" ]; then
-  CPU_MODEL=`echo "$CPU_MODEL" | sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Xeon(R) Gold/Xeon Gold/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/Intel(R) Pentium(R)/Pentium/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/^ //; s/ $//; s/  / /g;'`
+  CPU_MODEL=`echo "$CPU_MODEL" | sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Xeon(R) Gold/Xeon Gold/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/Intel(R) Pentium(R)/Pentium/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/ [0-9][0-9]-Core$//; s/^ //; s/ $//; s/  / /g;'`
 
   # special translations for Google Cloud (GCP) cases
   CPU_MODEL=`echo "$CPU_MODEL" | sed 's/AMD EPYC 7B12/AMD EPYC 7B12\/7742/'`
@@ -286,7 +286,7 @@ fi
 # Debian & Ubuntu has a special format
 if echo "$OS_VERSION" |grep -q Debian; then
   OS_VERSION=`echo $OS_VERSION | sed 's/\([0-9]\) \([A-Za-z]*\)/\1 "\l\2"/'`
-elif echo "$OS_VERSION" | grep -q Ubuntu; then
+elif echo "$OS_VERSION" |grep -q Ubuntu; then
   OS_VERSION=`echo $OS_VERSION | sed 's/LTS \([A-Z][a-z]* [A-Z][a-z]*\)$/LTS (\1)/; s/\([0-9]\) \([A-Z][a-z]* [A-Z][a-z]*\)$/\1 (\2)/;'`
 fi
 
@@ -295,11 +295,11 @@ fi
 if [ "$OS_TYPE" = "MacOS (Darwin)" -o "$OS_TYPE" = "MacOS" -o "$OS_TYPE" = "Darwin" ]; then
   if [[ $OSTYPE == darwin22* ]]; then
     EXTRA_OS_INFO=' (Ventura)'
-  if [[ $OSTYPE == darwin21* ]]; then
+  elif [[ $OSTYPE == darwin21* ]]; then
     EXTRA_OS_INFO=' (Monterey)'
-  if [[ $OSTYPE == darwin20* ]]; then
+  elif [[ $OSTYPE == darwin20* ]]; then
     EXTRA_OS_INFO=' (Big Sur)'
-  if [[ $OSTYPE == darwin19* ]]; then
+  elif [[ $OSTYPE == darwin19* ]]; then
     EXTRA_OS_INFO=' (Catalina)'
   elif [[ $OSTYPE == darwin18* ]]; then
     EXTRA_OS_INFO=' (Mojave)'
