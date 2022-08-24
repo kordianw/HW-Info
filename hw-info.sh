@@ -262,7 +262,7 @@ fi
 #
 OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 [ -z "$OS_TYPE" ] && OS_TYPE=`uname -s 2>/dev/null | sed 's/^Darwin$/MacOS (Darwin)/'`
-[ -s /etc/debian-release ] && OS_TYPE="Debian Linux"
+#[ -s /etc/debian-release -o -s /etc/debian_version ] && OS_TYPE="Debian Linux"
 [ -s /etc/redhat-release ] && OS_TYPE="Linux RHEL"
 [ -s /etc/fedora-release ] && OS_TYPE="Fedora Linux"
 [ -s /etc/centos-release ] && OS_TYPE="Linux CentOS"
@@ -286,11 +286,22 @@ fi
 [ -z "$OS_VERSION" -a -x "/usr/sbin/system_profiler" ] && OS_VERSION=`system_profiler SPSoftwareDataType 2>/dev/null | awk -F: '/System Version:/{print $NF}' | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`uname -r |sed 's/(.*//'`
 
+# fix issues such as: Debian Linux Debian
+if echo "$OS_TYPE $OS_VERSION" |grep -q "^[A-Z][a-z]* Linux [A-Z][a-z]*"; then
+  FIRST=`echo "$OS_TYPE $OS_VERSION" | awk '{print $1}'`
+  THIRD=`echo "$OS_TYPE $OS_VERSION" | awk '{print $3}'`
+  [ "$FIRST" = "$THIRD" ] && OS_VERSION=`echo $OS_VERSION | sed "s/^$THIRD//"`
+fi
+
 # Debian & Ubuntu has a special format
-if echo "$OS_VERSION" |grep -q Debian; then
+if echo "$OS_TYPE $OS_VERSION" |grep -q Debian; then
+  DEBIAN_VERSION=`cat /etc/debian_version 2>/dev/null | grep '[0-9]' | grep -v '[A-Z]'`
   OS_VERSION=`echo $OS_VERSION | sed 's/\([0-9]\) \([A-Za-z]*\)/\1 "\l\2"/'`
-elif echo "$OS_VERSION" |grep -q Ubuntu; then
+  [ -n "$DEBIAN_VERSION" ] && OS_VERSION=`echo $OS_VERSION | sed "s/^\([0-9][0-9]*\) /$DEBIAN_VERSION /; s/ \([0-9][0-9]*\) / $DEBIAN_VERSION /;"`
+elif echo "$OS_TYPE $OS_VERSION" |grep -q Ubuntu; then
   OS_VERSION=`echo $OS_VERSION | sed 's/LTS \([A-Z][a-z]* [A-Z][a-z]*\)$/LTS (\1)/; s/\([0-9]\) \([A-Z][a-z]* [A-Z][a-z]*\)$/\1 (\2)/;'`
+elif echo "$OS_TYPE $OS_VERSION" |grep -q "Common Base Linux Mariner"; then
+  OS_VERSION=`echo $OS_VERSION | sed 's/Common Base Linux Mariner/CBL-Mariner/'`
 fi
 
 # MacOS releases: see here:
