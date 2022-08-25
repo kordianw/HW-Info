@@ -422,7 +422,7 @@ DOMAIN=`domainname 2>/dev/null |grep -v "none" | sed 's/\..*//'`
 [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ] && DOMAIN=`uname -n | sed 's/\.[a-z0-9-]*\.com//; s/^[a-z0-9-]*\.\([a-z0-9-]*\)/\1/; s/\..*//'`
 [ -n "$DOMAIN" -a "$DOMAIN" = "localdomain" ] && DOMAIN=
 if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
-  [ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^::1 //;' | awk '{print $1}' | grep -v 127.0.0.1`
+  [ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^[0-9a-f:]* //; s/ [0-9a-f:]*$//' | awk '{print $1}' | grep -v 127.0.0.1`
   [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127\.0\.|192\.168\.|10\.0\.1/{print $2}' |tail -1 | sed 's/^.*://'`
   [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127\.0\.|192\.168\.|10\.0\.0/{print $2}' |tail -1 | sed 's/^.*://'`
   [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127\.0\.|192\.168\./{print $2}' |tail -1 | sed 's/^.*://'`
@@ -448,7 +448,7 @@ elif [ -n "$DOMAIN" ]; then
 fi
 
 # alternative DNS name which is different than the hostname
-[ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^::1 //;'| awk '{print $1}' | grep -v 127.0.0.1`
+[ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed sed 's/^[0-9a-f:]* //; s/ [0-9a-f:]*$//'| awk '{print $1}' | grep -v 127.0.0.1`
 [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
