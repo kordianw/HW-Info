@@ -269,6 +269,7 @@ OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 [ -s /etc/rocky-release ] && OS_TYPE="Rocky Linux"
 [ -s /etc/gentoo-release ] && OS_TYPE="Gentoo Linux"
 [ -s /etc/alpine-release ] && OS_TYPE="Alpine Linux"
+[ -s /etc/almalinux-release ] && OS_TYPE="AlmaLinux"
 
 if [ -s /etc/redhat-release -a ! -s /etc/fedora-release -a ! -s /etc/centos-release -a ! -s /etc/rocky-release ]; then
   OS_VERSION=`cat /etc/redhat-release 2>/dev/null |awk '{print $(NF-1)}'`
@@ -282,6 +283,8 @@ elif [ -s /etc/gentoo-release ]; then
   OS_VERSION=`cat /etc/gentoo-release 2>/dev/null |awk '{print $NF}' | xargs`
 elif [ -s /etc/alpine-release ]; then
   OS_VERSION=`cat /etc/alpine-release 2>/dev/null |awk '{print $NF}' | xargs`
+elif [ -s /etc/almalinux-release ]; then
+  OS_VERSION=`cat /etc/almalinux-release 2>/dev/null | sed 's/^.* \([0-9].*$\)/\1/'`
 fi
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/*release* 2>/dev/null |sort |uniq |awk -F= '/^(NAME|VERSION)=/{print $NF}' |sed 's/"//g; s#GNU/Linux##; s/ (\(.*\))/ \u\1/' |xargs`
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/issue 2>/dev/null |sed 's/^Welcome to //i' | awk '{print $1,$2}' | xargs | sed 's/^ //; s/ $//'`
