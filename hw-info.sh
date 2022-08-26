@@ -289,6 +289,15 @@ fi
 [ -z "$OS_VERSION" -a -x "/usr/sbin/system_profiler" ] && OS_VERSION=`system_profiler SPSoftwareDataType 2>/dev/null | awk -F: '/System Version:/{print $NF}' | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`uname -r |sed 's/(.*//'`
 
+# special case for Amazon Linux which uses codename /etc/system
+if [ -s /etc/system-release ]; then
+  if echo "$OS_TYPE $OS_VERSION" | grep -q "[0-9]$" ; then
+    if cat /etc/system-release | egrep -q '[a-z])$|[a-z]"$'; then
+      OS_VERSION="$OS_VERSION `awk '{print $NF}' /etc/system-release`"
+    fi
+  fi
+fi
+
 # fix issues such as: Debian Linux Debian
 if echo "$OS_TYPE $OS_VERSION" |grep -q "^[A-Z][a-z]* Linux [A-Z][a-z]*"; then
   FIRST=`echo "$OS_TYPE $OS_VERSION" | awk '{print $1}'`
@@ -448,7 +457,7 @@ elif [ -n "$DOMAIN" ]; then
 fi
 
 # alternative DNS name which is different than the hostname
-[ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed sed 's/^[0-9a-f:]* //; s/ [0-9a-f:]*$//'| awk '{print $1}' | grep -v 127.0.0.1`
+[ -z "$IP" ] && IP=`hostname -i 2>/dev/null | sed 's/^[0-9a-f:]* //; s/ [0-9a-f:]*$//'| awk '{print $1}' | grep -v 127.0.0.1`
 [ -z "$IP" -a -x /sbin/ifconfig ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`/sbin/ifconfig 2>/dev/null |awk '/inet.*(broadcast|Bcast)/ && !/127.0/{print $2}' |tail -1 | sed 's/^.*://'`
 [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=`hostname -I 2>/dev/null | awk '{print $1}'`
