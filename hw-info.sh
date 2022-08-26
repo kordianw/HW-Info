@@ -295,7 +295,7 @@ fi
 # special case for Amazon Linux which uses codename /etc/system
 if [ -s /etc/system-release ]; then
   if echo "$OS_TYPE $OS_VERSION" | grep -q "[0-9]$" ; then
-    if cat /etc/system-release | egrep -q '[a-z])$|[a-z]"$'; then
+    if cat /etc/system-release | egrep -q '[a-z]\)$|[a-z]"$'; then
       OS_VERSION="$OS_VERSION `awk '{print $NF}' /etc/system-release`"
     fi
   fi
