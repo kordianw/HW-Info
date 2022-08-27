@@ -617,7 +617,7 @@ if which curl >&/dev/null; then
     fi
   else
     # try GCP next
-    timeout 1 curl -s -H 'Metadata-Flavor: Google' "http://169.254.169.254/computeMetadata/v1/instance" 2>/dev/null > $CLOUD_DATA
+    timeout 1 curl -s -H 'Metadata-Flavor: Google' "http://169.254.169.254/computeMetadata/v1/instance/" 2>/dev/null > $CLOUD_DATA
     if grep -q zone $CLOUD_DATA; then
       URL_BASE="http://169.254.169.254/computeMetadata/v1/instance"
       GCP_DC_ZONE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/zone | grep -v 404 | sed 's/.*\///'`
