@@ -691,10 +691,16 @@ fi
 
 # Tribal Knowledge:
 # - all LINODE HDs are now SSD (KVM can't detect that and also for Alpine Linux)
+# - can override HD-type as SSD, if we know it's SSD from the public-cloud metadata
 if echo "$DOMAIN" | grep -qi linode; then
   if [ "$VM" = "KVM" -a "$HD_TYPE" = "HDD" ]; then
     HD_TYPE="SSD"
   elif [ "$VM" = "VMware" -a "$HD_TYPE" = "HDD" ] && echo "$HW" | grep -q 'QEMU Standard PC'; then
+    HD_TYPE="SSD"
+  fi
+fi
+if echo "$CLOUD_DISK_TYPE" | grep -iq SSD; then
+  if [ "$HD_TYPE" = "HDD" ] && echo "$VM" | grep -iq VM; then
     HD_TYPE="SSD"
   fi
 fi
