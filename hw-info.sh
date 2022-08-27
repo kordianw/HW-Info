@@ -641,6 +641,22 @@ if which curl >&/dev/null; then
           CLOUD_CPU_PLATFORM="/$GCP_CPU_PLATFORM"
         fi
       fi
+    else
+      # try AWS ECS next
+      # - only useful info we can get it is AWS Availability Zone, sadly.
+      timeout 1 curl -s http://169.254.170.2/v2/metadata 2>/dev/null > $CLOUD_DATA
+      if [ -s $CLOUD_DATA ]; then
+        AWS_DC_ZONE_RAW=`sed 's/^.*"AvailabilityZone":"\([^"]*\)".*/\1/' $CLOUD_DATA 2>/dev/null`
+        if echo "$AWS_DC_ZONE_RAW" | egrep -q '^[a-z][a-z1-4-]*$'; then
+          AWS_DC_ZONE=$AWS_DC_ZONE_RAW
+        fi
+        if [ -n "$AWS_DC_ZONE" ]; then
+          CLOUD_LOCATION=" @ AWS"
+          if ! echo "$HOST$DOMAIN$HOST_EXTRA" | grep -iq "$AWS_DC_ZONE"; then
+            CLOUD_LOCATION=" @ AWS/$AWS_DC_ZONE"
+          fi
+        fi
+      fi
     fi
   fi
 
