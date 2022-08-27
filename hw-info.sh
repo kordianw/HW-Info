@@ -269,6 +269,7 @@ OS_TYPE=`uname -o 2>/dev/null |awk -F/ '{print $NF}'`
 [ -s /etc/redhat-release ] && OS_TYPE="Linux RHEL"
 [ -s /etc/fedora-release ] && OS_TYPE="Fedora Linux"
 [ -s /etc/centos-release ] && OS_TYPE="Linux CentOS"
+[ -s /etc/oracle-release ] && OS_TYPE="Oracle Linux"
 [ -s /etc/rocky-release ] && OS_TYPE="Rocky Linux"
 [ -s /etc/gentoo-release ] && OS_TYPE="Gentoo Linux"
 [ -s /etc/alpine-release ] && OS_TYPE="Alpine Linux"
@@ -280,6 +281,8 @@ elif [ -s /etc/fedora-release ]; then
   OS_VERSION=`cat /etc/fedora-release 2>/dev/null |awk '{print $3}'`
 elif [ -s /etc/centos-release ]; then
   OS_VERSION=`cat /etc/centos-release 2>/dev/null |awk '{print $2,$3,$4,$5}' | xargs | sed 's/ release / /'`
+elif [ -s /etc/oracle-release ]; then
+  OS_VERSION=`cat /etc/oracle-release 2>/dev/null |awk '{print $NF}' | xargs`
 elif [ -s /etc/rocky-release ]; then
   OS_VERSION=`cat /etc/rocky-release 2>/dev/null |awk '{print $4,$5,$6,$7}' | xargs | sed 's/ release / /'`
 elif [ -s /etc/gentoo-release ]; then
@@ -699,7 +702,7 @@ if echo "$DOMAIN" | grep -qi linode; then
     HD_TYPE="SSD"
   fi
 fi
-if echo "$CLOUD_DISK_TYPE" | grep -iq SSD; then
+if echo "$CLOUD_DISK_TYPE" | egrep -iq 'SSD|Premium_LRS'; then
   if [ "$HD_TYPE" = "HDD" ] && echo "$VM" | grep -iq VM; then
     HD_TYPE="SSD"
   fi
