@@ -650,7 +650,7 @@ if which curl >&/dev/null; then
       fi
     else
       # try Azure next
-      timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2017-08-01" > $CLOUD_DATA
+      # timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2017-08-01" > $CLOUD_DATA
       timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2021-02-01" > $CLOUD_DATA
       #timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2021-11-01" > $CLOUD_DATA
       if grep -q "vmSize" $CLOUD_DATA; then
@@ -668,11 +668,17 @@ if which curl >&/dev/null; then
           fi
         fi
       else
-        # try AWS ECS next
-        # - only useful info we can get it is AWS Availability Zone, sadly.
+        # try AWS ECS (Container) next
+        # - main useful info we can get it is AWS Availability Zone
+        # "Limits":{"CPU":1,"Memory":2048},
         timeout 1 curl -s http://169.254.170.2/v2/metadata 2>/dev/null > $CLOUD_DATA
         if grep -q AvailabilityZone $CLOUD_DATA; then
           AWS_DC_ZONE_RAW=`sed 's/^.*"AvailabilityZone":"\([^"]*\)".*/\1/' $CLOUD_DATA 2>/dev/null`
+
+          AWS_CPU_LIMIT=`sed 's/^.*"Limits":{"CPU":\([0-9]*\),"Memory":[0-9]*},.*/\1/' $CLOUD_DATA 2>/dev/null`
+          AWS_MEM_LIMIT=`sed 's/^.*"Limits":{"CPU":[0-9]*,"Memory":\([0-9]*\)},.*/\1/' $CLOUD_DATA 2>/dev/null`
+          CONTAINER="$CONTAINER (CPU Limit=$AWS_CPU_LIMIT, MEM Limit=$AWS_MEM_LIMIT)"
+
           if echo "$AWS_DC_ZONE_RAW" | egrep -q '^[a-z][a-z1-4-]*$'; then
             AWS_DC_ZONE=$AWS_DC_ZONE_RAW
           fi
