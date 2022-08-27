@@ -541,9 +541,10 @@ fi
 EVIDENCE_FILE=/tmp/container-evidence-$$
 if [ -r /proc/1/cgroup ]; then
   egrep -i 'docker|kubernetes|openshift|/ecs/|/ocp/|/kubepods/' /proc/1/cgroup| head -1 >> $EVIDENCE_FILE
-  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'docker' /proc/1/cgroup && CONTAINER_TYPE=Docker
-  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'kubernetes|/kubepods/' /proc/1/cgroup && CONTAINER_TYPE=K8s
-  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'openshift|/ocp/' /proc/1/cgroup && CONTAINER_TYPE=OpenShift
+  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'docker' /proc/1/cgroup && CONTAINER_TYPE="Docker"
+  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'kubernetes|/kubepods/' /proc/1/cgroup && CONTAINER_TYPE="K8s"
+  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'openshift|/ocp/' /proc/1/cgroup && CONTAINER_TYPE="OpenShift"
+  [ -z "$CONTAINER_TYPE" ] && egrep -qi '/ecs/' /proc/1/cgroup && CONTAINER_TYPE="AWS ECS"
 fi
 
 [ -r /.dockerenv ] && echo "/.dockerenv" >> $EVIDENCE_FILE
