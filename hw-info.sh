@@ -17,6 +17,7 @@
 # - Distribution name (or MacOS release friendly name)
 # - year of OS release
 # - Bare Metal or VM, VM type
+# - are we running inside a container?
 # - HW type & model (incl hypervisor type)
 # - How much RAM (in GB)
 # - How many CPUs (or cores/threads)
@@ -532,6 +533,44 @@ if [ -s /sys/class/dmi/id/chassis_type ]; then
   [ -n "$SYS_TYPE" ] && SYS_TYPE=" $SYS_TYPE"
 fi
 
+# are we running inside a container? - we check:
+# 1) /proc/1/cgroup
+# 2) -e /.dockerenv
+# 3) stat -c %i / <less than 150
+# 4) container env vars
+EVIDENCE_FILE=/tmp/container-evidence-$$
+if [ -r /proc/1/cgroup ]; then
+  egrep -i 'docker|kubernetes|openshift|/ecs/|/ocp/|/kubepods/' /proc/1/cgroup| head -1 >> $EVIDENCE_FILE
+  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'docker' /proc/1/cgroup && CONTAINER_TYPE=Docker
+  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'kubernetes|/kubepods/' /proc/1/cgroup && CONTAINER_TYPE=K8s
+  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'openshift|/ocp/' /proc/1/cgroup && CONTAINER_TYPE=OpenShift
+fi
+
+[ -r /.dockerenv ] && echo "/.dockerenv" >> $EVIDENCE_FILE
+
+ROOT_INODE_NO=`stat -c %i / 2>/dev/null`
+if [ -n "$ROOT_INODE_NO" ]; then
+  [ $ROOT_INODE_NO -gt 150 ] && echo "$ROOT_INODE_NO" >> $EVIDENCE_FILE
+fi
+
+if which printenv >&/dev/null; then
+  printenv 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT' | head -1 >> $EVIDENCE_FILE
+else
+  set 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT' | head -1 >> $EVIDENCE_FILE
+fi
+
+# do we have any evidence that it's a container?
+if [ -s $EVIDENCE_FILE ]; then
+  if [ `grep -c . $EVIDENCE_FILE` -gt 1 ]; then
+    CONTAINER=" @ CONTAINER"
+    [ -n "$CONTAINER_TYPE" ] && CONTAINER=" @ $CONTAINER_TYPE Container"
+  fi
+fi
+
+rm -rf $EVIDENCE_FILE
+
+###############################
+
 # Tribal Knowledge:
 # - all LINODE HDs are now SSD (KVM can't detect that and also for Alpine Linux)
 if echo "$DOMAIN" | grep -qi linode; then
@@ -545,7 +584,7 @@ fi
 #
 # /FINAL PRINT/
 #
-echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $VM$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE $HD_TYPE/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/VM Desktop/VM/; s/, Built *$//'
+echo "$HOST$DOMAIN$HOST_EXTRA: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ, $BIT_TYPE, $HD_SIZE $HD_TYPE/$FS_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/VM Desktop/VM/; s/, Built *$//'
 
 # clean-up
 rm -f $LSCPU
