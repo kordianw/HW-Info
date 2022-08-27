@@ -561,9 +561,9 @@ if [ -n "$ROOT_INODE_NO" ]; then
 fi
 
 if which printenv >&/dev/null; then
-  printenv 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT' | head -1 >> $EVIDENCE_FILE
+  printenv 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT|AWS_ECS' | head -1 >> $EVIDENCE_FILE
 else
-  set 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT' | head -1 >> $EVIDENCE_FILE
+  set 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT|AWS_ECS' | head -1 >> $EVIDENCE_FILE
 fi
 
 if uname -s 2>/dev/null | grep -q Linux; then
