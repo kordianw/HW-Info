@@ -618,12 +618,12 @@ if which curl >&/dev/null; then
   else
     # try GCP next
     timeout 1 curl -s -H 'Metadata-Flavor: Google' "http://169.254.169.254/computeMetadata/v1/instance" 2>/dev/null > $CLOUD_DATA
-    if [ -s $CLOUD_DATA ]; then
+    if grep -q zone $CLOUD_DATA; then
       URL_BASE="http://169.254.169.254/computeMetadata/v1/instance"
-      GCP_DC_ZONE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/zone | sed 's/.*\///'`
-      GCP_MACHINE_TYPE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/machine-type | sed 's/.*\///'`
-      GCP_CPU_PLATFORM=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/cpu-platform`
-      GCP_DISK_TYPE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/disks/0/type | sed -e 's/\(.*\)/\L\1/'`
+      GCP_DC_ZONE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/zone | grep -v 404 | sed 's/.*\///'`
+      GCP_MACHINE_TYPE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/machine-type | grep -v 404 | sed 's/.*\///'`
+      GCP_CPU_PLATFORM=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/cpu-platform | grep -v 404`
+      GCP_DISK_TYPE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/disks/0/type | grep -v 404 | sed -e 's/\(.*\)/\L\1/'`
 
       [ -n "$GCP_MACHINE_TYPE" ] && CLOUD_MACHINE_TYPE="GCP/$GCP_MACHINE_TYPE: "
       [ -n "$GCP_DISK_TYPE" ] && CLOUD_DISK_TYPE="/$GCP_DISK_TYPE"
@@ -645,7 +645,7 @@ if which curl >&/dev/null; then
       # try AWS ECS next
       # - only useful info we can get it is AWS Availability Zone, sadly.
       timeout 1 curl -s http://169.254.170.2/v2/metadata 2>/dev/null > $CLOUD_DATA
-      if [ -s $CLOUD_DATA ]; then
+      if grep -q AvailabilityZone $CLOUD_DATA; then
         AWS_DC_ZONE_RAW=`sed 's/^.*"AvailabilityZone":"\([^"]*\)".*/\1/' $CLOUD_DATA 2>/dev/null`
         if echo "$AWS_DC_ZONE_RAW" | egrep -q '^[a-z][a-z1-4-]*$'; then
           AWS_DC_ZONE=$AWS_DC_ZONE_RAW
