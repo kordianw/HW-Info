@@ -573,8 +573,10 @@ fi
 if [ -s $EVIDENCE_FILE ]; then
   if [ `grep -c . $EVIDENCE_FILE` -gt 1 ]; then
     CONTAINER=" @ CONTAINER"
-    [ -n "$CONTAINER_TYPE" ] && CONTAINER=" @ $CONTAINER_TYPE Container"
+    [ -n "$CONTAINER_TYPE" ] && CONTAINER=" @ $CONTAINER_TYPE CONTAINER"
   fi
+elif [ "$VM" = "gVisor" -o "$VM" = "gVisor VM" ]; then
+  CONTAINER="@ CONTAINER"
 fi
 
 rm -rf $EVIDENCE_FILE
