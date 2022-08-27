@@ -537,14 +537,16 @@ fi
 # 1) /proc/1/cgroup
 # 2) -e /.dockerenv
 # 3) stat -c %i / <less than 150
-# 4) container env vars
+# 4) grep 'kthreadd' /proc/2/status 2>/dev/null
+# 5) container env vars
 EVIDENCE_FILE=/tmp/container-evidence-$$
 if [ -r /proc/1/cgroup ]; then
-  egrep -i 'docker|kubernetes|openshift|/ecs/|/ocp/|/kubepods/' /proc/1/cgroup| head -1 >> $EVIDENCE_FILE
-  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'docker' /proc/1/cgroup && CONTAINER_TYPE="Docker"
+  egrep -i 'docker|kubernetes|openshift|/ecs/|/lxc/|/ocp/|/kubepods/' /proc/1/cgroup| head -1 >> $EVIDENCE_FILE
+  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'docker|docker\|lxc' /proc/1/cgroup && CONTAINER_TYPE="Docker"
   [ -z "$CONTAINER_TYPE" ] && egrep -qi 'kubernetes|/kubepods/' /proc/1/cgroup && CONTAINER_TYPE="K8s"
   [ -z "$CONTAINER_TYPE" ] && egrep -qi 'openshift|/ocp/' /proc/1/cgroup && CONTAINER_TYPE="OpenShift"
   [ -z "$CONTAINER_TYPE" ] && egrep -qi '/ecs/' /proc/1/cgroup && CONTAINER_TYPE="AWS ECS"
+  [ -z "$CONTAINER_TYPE" ] && egrep -qi '/lxc/' /proc/1/cgroup && CONTAINER_TYPE="LXC"
 fi
 
 [ -r /.dockerenv ] && echo "/.dockerenv" >> $EVIDENCE_FILE
@@ -560,7 +562,14 @@ else
   set 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT' | head -1 >> $EVIDENCE_FILE
 fi
 
+if uname -s 2>/dev/null | grep -q Linux; then
+  if [ -z "$(grep 'kthreadd' /proc/2/status 2>/dev/null)" ]; then
+    echo "kthreadd" >> $EVIDENCE_FILE
+  fi
+fi
+
 # do we have any evidence that it's a container?
+# - need at least 2 pieces of evidence!
 if [ -s $EVIDENCE_FILE ]; then
   if [ `grep -c . $EVIDENCE_FILE` -gt 1 ]; then
     CONTAINER=" @ CONTAINER"
