@@ -447,11 +447,15 @@ if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
     DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $2}' | sed 's/[^A-Za-z0-9_-]*//g'`
     [ -n "$DOMAIN" -a "$DOMAIN" = "ip" ] && DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g'`
     [ -n "$DOMAIN" -a "$DOMAIN" = "bc" ] && DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g'`
+    [ -n "$DOMAIN" -a "$DOMAIN" = "internal" ] && DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g'`
+    [ -n "$DOMAIN" -a "$DOMAIN" = "default" ] && DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g'`
     [ -n "$DOMAIN" -a "$DOMAIN" = "compute-1" ] && DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g'`
 
     [ -z "$DOMAIN" ] && DOMAIN=`host "$IP" 2>/dev/null |awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $2}'`
     [ -n "$DOMAIN" -a "$DOMAIN" = "ip" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
     [ -n "$DOMAIN" -a "$DOMAIN" = "bc" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
+    [ -n "$DOMAIN" -a "$DOMAIN" = "internal" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
+    [ -n "$DOMAIN" -a "$DOMAIN" = "default" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
     [ -n "$DOMAIN" -a "$DOMAIN" = "compute-1" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
   fi
 fi
@@ -642,18 +646,38 @@ if which curl >&/dev/null; then
         fi
       fi
     else
-      # try AWS ECS next
-      # - only useful info we can get it is AWS Availability Zone, sadly.
-      timeout 1 curl -s http://169.254.170.2/v2/metadata 2>/dev/null > $CLOUD_DATA
-      if grep -q AvailabilityZone $CLOUD_DATA; then
-        AWS_DC_ZONE_RAW=`sed 's/^.*"AvailabilityZone":"\([^"]*\)".*/\1/' $CLOUD_DATA 2>/dev/null`
-        if echo "$AWS_DC_ZONE_RAW" | egrep -q '^[a-z][a-z1-4-]*$'; then
-          AWS_DC_ZONE=$AWS_DC_ZONE_RAW
+      # try Azure next
+      timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2017-08-01" > $CLOUD_DATA
+      timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2021-02-01" > $CLOUD_DATA
+      #timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2021-11-01" > $CLOUD_DATA
+      if grep -q "vmSize" $CLOUD_DATA; then
+        AZURE_ZONE=`sed 's/^.*"location":"\([^"]*\)".*/\1/' $CLOUD_DATA 2>/dev/null`
+        AZURE_MACHINE_TYPE=`sed 's/^.*"vmSize":"\([^"]*\)".*/\1/' $CLOUD_DATA 2>/dev/null`
+        AZURE_DISK_TYPE=`sed 's/^.*"storageAccountType":"\([^"]*\)".*/\1/' $CLOUD_DATA 2>/dev/null`
+
+        [ -n "$AZURE_MACHINE_TYPE" ] && CLOUD_MACHINE_TYPE="AZURE/$AZURE_MACHINE_TYPE: "
+        [ -n "$AZURE_DISK_TYPE" ] && CLOUD_DISK_TYPE="/$AZURE_DISK_TYPE"
+
+        if [ -n "$AZURE_ZONE" ]; then
+          CLOUD_LOCATION=" @ AZURE"
+          if ! echo "$HOST$DOMAIN$HOST_EXTRA" | grep -iq "$AZURE_ZONE"; then
+            CLOUD_LOCATION=" @ AZURE/$AZURE_ZONE"
+          fi
         fi
-        if [ -n "$AWS_DC_ZONE" ]; then
-          CLOUD_LOCATION=" @ AWS"
-          if ! echo "$HOST$DOMAIN$HOST_EXTRA" | grep -iq "$AWS_DC_ZONE"; then
-            CLOUD_LOCATION=" @ AWS/$AWS_DC_ZONE"
+      else
+        # try AWS ECS next
+        # - only useful info we can get it is AWS Availability Zone, sadly.
+        timeout 1 curl -s http://169.254.170.2/v2/metadata 2>/dev/null > $CLOUD_DATA
+        if grep -q AvailabilityZone $CLOUD_DATA; then
+          AWS_DC_ZONE_RAW=`sed 's/^.*"AvailabilityZone":"\([^"]*\)".*/\1/' $CLOUD_DATA 2>/dev/null`
+          if echo "$AWS_DC_ZONE_RAW" | egrep -q '^[a-z][a-z1-4-]*$'; then
+            AWS_DC_ZONE=$AWS_DC_ZONE_RAW
+          fi
+          if [ -n "$AWS_DC_ZONE" ]; then
+            CLOUD_LOCATION=" @ AWS"
+            if ! echo "$HOST$DOMAIN$HOST_EXTRA" | grep -iq "$AWS_DC_ZONE"; then
+              CLOUD_LOCATION=" @ AWS/$AWS_DC_ZONE"
+            fi
           fi
         fi
       fi
