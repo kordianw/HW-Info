@@ -579,7 +579,7 @@ elif [ "$VM" = "gVisor" -o "$VM" = "gVisor VM" ]; then
   CONTAINER="@ CONTAINER"
 fi
 
-rm -rf $EVIDENCE_FILE
+rm -f $EVIDENCE_FILE
 
 ###############################
 
