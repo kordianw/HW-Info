@@ -1,7 +1,7 @@
 #!/bin/bash
 # Portable & simple HW-Info script - quickly & easily get an idea of the HW you're working on
 # - works on any OS that can run bash
-# - tested on Linux, MacOS, AWS/GCP/Azure, Cygwin & WSL
+# - tested on Linux, MacOS, AWS/GCP/Azure, Cygwin & WSL + Kubernetes/Docker containers
 #
 # RUN DIRECTLY FROM GITHUB:
 # $ curl -sSL https://github.com/kordianw/HW-Info/raw/master/hw-info.sh | bash
@@ -14,10 +14,12 @@
 # Provides the following information as a 1-liner:
 # - hostname (and domain, if appropriate)
 # - OS type & OS name (eg: Ubuntu) and version
+# - Public Cloud region/availability zone (if available)
 # - Distribution name (or MacOS release friendly name)
 # - year of OS release
 # - Bare Metal or VM, VM type
 # - are we running inside a container?
+# - public cloud machine type (if available)
 # - HW type & model (incl hypervisor type)
 # - How much RAM (in GB)
 # - How many CPUs (or cores/threads)
@@ -600,19 +602,30 @@ if which curl >&/dev/null; then
   # try AWS first
   timeout 1 curl -s "http://169.254.169.254/latest/dynamic/instance-identity/document" 2>/dev/null > $CLOUD_DATA
   if grep -q instanceType $CLOUD_DATA; then
-    echo "TODO: AWS Machine!"
-    cat $CLOUD_DATA
+    AWS_DC_ZONE=`awk '/availabilityZone/{print $NF}' $CLOUD_DATA 2>/dev/null | sed 's/"//g; s/,$//'`
+    AWS_MACHINE_TYPE=`awk '/instanceType/{print $NF}' $CLOUD_DATA 2>/dev/null | sed 's/"//g; s/,$//'`
+    AWS_ARCHITECTURE=`awk '/architecture/{print $NF}' $CLOUD_DATA 2>/dev/null | sed 's/"//g; s/,$//'`
+
+    [ -n "$AWS_MACHINE_TYPE" ] && CLOUD_MACHINE_TYPE="AWS/$AWS_MACHINE_TYPE: "
+    [ -n "$AWS_ARCHITECTURE" ] && CLOUD_ARCHITECTURE="/$AWS_ARCHITECTURE"
+
+    if [ -n "$AWS_DC_ZONE" ]; then
+      CLOUD_LOCATION=" @ AWS"
+      if ! echo "$HOST$DOMAIN$HOST_EXTRA" | grep -iq "$AWS_DC_ZONE"; then
+        CLOUD_LOCATION=" @ AWS/$AWS_DC_ZONE"
+      fi
+    fi
   else
     # try GCP next
     timeout 1 curl -s -H 'Metadata-Flavor: Google' "http://169.254.169.254/computeMetadata/v1/instance" 2>/dev/null > $CLOUD_DATA
     if [ -s $CLOUD_DATA ]; then
       URL_BASE="http://169.254.169.254/computeMetadata/v1/instance"
       GCP_DC_ZONE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/zone | sed 's/.*\///'`
-      MACHINE_TYPE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/machine-type | sed 's/.*\///'`
+      GCP_MACHINE_TYPE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/machine-type | sed 's/.*\///'`
       GCP_CPU_PLATFORM=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/cpu-platform`
       GCP_DISK_TYPE=`timeout 1 curl -s -H "Metadata-Flavor: Google" $URL_BASE/disks/0/type | sed -e 's/\(.*\)/\L\1/'`
 
-      [ -n "$MACHINE_TYPE" ] && CLOUD_MACHINE_TYPE="GCP/$MACHINE_TYPE: "
+      [ -n "$GCP_MACHINE_TYPE" ] && CLOUD_MACHINE_TYPE="GCP/$GCP_MACHINE_TYPE: "
       [ -n "$GCP_DISK_TYPE" ] && CLOUD_DISK_TYPE="/$GCP_DISK_TYPE"
 
       if [ -n "$GCP_DC_ZONE" ]; then
@@ -649,7 +662,7 @@ fi
 #
 # /FINAL PRINT/
 #
-echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/VM Desktop/VM/; s/, Built *$//'
+echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/VM Desktop/VM/; s/, Built *$//'
 
 # clean-up
 rm -f $LSCPU
