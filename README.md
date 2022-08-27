@@ -1,14 +1,17 @@
 # HW-Info
-Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, Windows, Chromebook, etc)
+Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, Windows, Public Cloud, Container, Chromebook, etc)
 ... delivered as a 1-liner, eg: useful as part of logging into any machine, such as the one in the public cloud.
 
 ## Description
 Provides the following information as a 1-liner:
 - hostname (and domain, if appropriate)
 - OS type & OS name (eg: Ubuntu) and version
+- Public Cloud region/availability zone (if available)
 - Distribution name (or MacOS release friendly name)
 - year of OS release
 - Bare Metal or VM, VM type
+- are we running inside a container?
+- public cloud machine type (if available)
 - HW type & model (incl hypervisor type)
 - How much RAM (in GB)
 - How many CPUs (or cores/threads)
@@ -17,7 +20,6 @@ Provides the following information as a 1-liner:
 - CPU Architecture (eg: Haswell, Skylake, Ice Lake, etc)
 - 32bit or 64bit system?
 - Local Disk sizes (in human friendly format)
-- Is it a HDD (rotational/spinning disk/media) or SSD (flash) disk (or NVMe SSD)
 - FS type (eg: ext4, ntfs, btrfs)
 - When was the OS built? (based on dates of some key root files)
 
