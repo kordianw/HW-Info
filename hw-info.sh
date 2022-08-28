@@ -616,8 +616,14 @@ if which curl >&/dev/null; then
     AWS_MACHINE_TYPE=`awk '/instanceType/{print $NF}' $CLOUD_DATA 2>/dev/null | sed 's/"//g; s/,$//'`
     AWS_ARCHITECTURE=`awk '/architecture/{print $NF}' $CLOUD_DATA 2>/dev/null | sed 's/"//g; s/,$//'`
 
-    [ -n "$AWS_MACHINE_TYPE" ] && CLOUD_MACHINE_TYPE="AWS/$AWS_MACHINE_TYPE: "
     [ -n "$AWS_ARCHITECTURE" ] && CLOUD_ARCHITECTURE="/$AWS_ARCHITECTURE"
+
+    if [ -n "$AWS_MACHINE_TYPE" ]; then
+      CLOUD_MACHINE_TYPE="AWS: "
+      if ! echo "$HW" | grep -iq "$AWS_MACHINE_TYPE"; then
+        CLOUD_MACHINE_TYPE="AWS/$AWS_MACHINE_TYPE: "
+      fi
+    fi
 
     if [ -n "$AWS_DC_ZONE" ]; then
       CLOUD_LOCATION=" @ AWS"
