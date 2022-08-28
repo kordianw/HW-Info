@@ -1,6 +1,7 @@
 # HW-Info
 Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, Windows, Public Cloud, Container, Chromebook, etc)
 ... delivered as a 1-liner, eg: useful as part of logging into any machine, such as the one in the public cloud.
+... good support for VMs in the public cloud (Amazon AWS, Azure, Google GCP) and containers (Kubernetes, Docker, AWS ECS, etc)
 
 ## Description
 Provides the following information as a 1-liner:
@@ -20,8 +21,29 @@ Provides the following information as a 1-liner:
 - CPU Architecture (eg: Haswell, Skylake, Ice Lake, etc)
 - 32bit or 64bit system?
 - Local Disk sizes (in human friendly format)
+- SSD (incl. NVMe) or HDD (spinning disk)?
 - FS type (eg: ext4, ntfs, btrfs)
 - When was the OS built? (based on dates of some key root files)
+
+## Public Cloud Support
+Works well with Amazon AWS (EC2), Google Cloud (GCP) and Azure VMs:
+- works out region/availability zone
+- works out machine type such as: t3.medium, m5.large or e2-standard-4
+- where applicable, provides extra disk information, such as "persistent-ssd"
+NB: uses metadata service: http://169.254.169.254/ which each hyperscaler provides
+
+## Container Support
+Tries to work out if we're running under a Container, supports:
+- Kubernetes (K8s)
+- Docker
+- AWS ECS
+- Google gVisor (eg: Cloud Run)
+- ... and some others
+
+Also tries to work out any CPU or memory limits by looking at the QoS, which is usually:
+- reserved/dedicated
+- burstable
+- besteffort
 
 ## How to run directly
 You can run this directly from GitHub:
