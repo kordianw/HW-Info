@@ -722,7 +722,7 @@ if [ -n "$CONTAINER" ]; then
   [ -z "$CONTAINER_LIMITS" ] && CONTAINER_LIMITS=`egrep ":cpu,cpuacct:|:memory:" /proc/1/cgroup 2>/dev/null | grep "/kubepods/" | sed 's/.*\/kubepods\/\([^\/]*\)\/.*/\1/' |sort -u | xargs | sed 's/ /+/g'`
   [ -z "$CONTAINER_LIMITS" ] && CONTAINER_LIMITS=`egrep ":cpu,cpuacct:|:memory:" /proc/1/cgroup 2>/dev/null | grep "/kubepods.slice/" | sed 's/.*\/kubepods.slice\/kubepods-\([^\.]*\)\..*/\1/' |sort -u | xargs | sed 's/ /+/g'`
 
-  [ -n "$CONTAINER_LIMITS" ] && CONTAINER="$CONTAINER (CPU/Mem Limits=$CONTAINER_LIMITS)"
+  [ -n "$CONTAINER_LIMITS" ] && CONTAINER="$CONTAINER (CPU/Mem QoS=$CONTAINER_LIMITS)"
 fi
 
 #
