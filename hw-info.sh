@@ -701,6 +701,7 @@ fi
 # Tribal Knowledge:
 # - all LINODE HDs are now SSD (KVM can't detect that and also for Alpine Linux)
 # - can override HD-type as SSD, if we know it's SSD from the public-cloud metadata
+# - add Kubernetes limits, if known
 if echo "$DOMAIN" | grep -qi linode; then
   if [ "$VM" = "KVM" -a "$HD_TYPE" = "HDD" ]; then
     HD_TYPE="SSD"
@@ -712,6 +713,16 @@ if echo "$CLOUD_DISK_TYPE" | egrep -iq 'SSD|Premium_LRS'; then
   if [ "$HD_TYPE" = "HDD" ] && echo "$VM" | grep -iq VM; then
     HD_TYPE="SSD"
   fi
+fi
+if [ -n "$CONTAINER" ]; then
+  # 6:cpu,cpuacct:/kubepods/besteffort/podcd8e928f3e90ec0f5263f60e1dd50c4f/fef96fe790b4ffa0bcf592ed6b2dfc61a63f1671074e6206cc46d3be3842ebd3
+  # 5:cpu,cpuacct:/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-pod
+
+  # different regexes:
+  [ -z "$CONTAINER_LIMITS" ] && CONTAINER_LIMITS=`egrep ":cpu,cpuacct:|:memory:" /proc/1/cgroup 2>/dev/null | grep "/kubepods/" | sed 's/.*\/kubepods\/\([^\/]*\)\/.*/\1/' |sort -u | xargs | sed 's/ /+/g'`
+  [ -z "$CONTAINER_LIMITS" ] && CONTAINER_LIMITS=`egrep ":cpu,cpuacct:|:memory:" /proc/1/cgroup 2>/dev/null | grep "/kubepods.slice/" | sed 's/.*\/kubepods.slice\/kubepods-\([^\.]*\)\..*/\1/' |sort -u | xargs | sed 's/ /+/g'`
+
+  [ -n "$CONTAINER_LIMITS" ] && CONTAINER="$CONTAINER (CPU/Mem Limits=$CONTAINER_LIMITS)"
 fi
 
 #
