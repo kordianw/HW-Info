@@ -539,6 +539,9 @@ if [ -s /sys/class/dmi/id/chassis_type ]; then
   if [ -z "$SYS_TYPE" ]; then
     [ -f /sys/module/battery/initstate -o -d /proc/acpi/battery/BAT0 -o -L /sys/class/power_supply/BAT0 ] && SYS_TYPE="Laptop"
   fi
+  if [ -n "$SYS_TYPE" -a "$SYS_TYPE" = "Desktop" ] && echo "$VM" | grep -q VM; then
+    SYS_TYPE=
+  fi
   [ -n "$SYS_TYPE" ] && SYS_TYPE=" $SYS_TYPE"
 fi
 
@@ -728,7 +731,7 @@ fi
 #
 # /FINAL PRINT/
 #
-echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/VM Desktop/VM/; s/, Built *$//'
+echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/, Built *$//'
 
 # clean-up
 rm -f $LSCPU
