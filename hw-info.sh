@@ -243,6 +243,8 @@ if [ -n "$CPU_MODEL" ]; then
   fi
 fi
 
+# clean-up CPU temp file
+rm -f $LSCPU
 
 #
 # MEMORY
@@ -659,6 +661,7 @@ if which curl >&/dev/null; then
       fi
     else
       # try Azure next
+      # - there are different API versions, each returning differing amounts of info:
       # timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2017-08-01" > $CLOUD_DATA
       timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2021-02-01" > $CLOUD_DATA
       #timeout 1 curl -s -H Metadata:true "http://169.254.169.254/metadata/instance/?api-version=2021-11-01" > $CLOUD_DATA
@@ -676,7 +679,7 @@ if which curl >&/dev/null; then
             CLOUD_LOCATION=" @ AZURE/$AZURE_ZONE"
           fi
         fi
-      else
+      elif [ -n "$CONTAINER" ]; then
         # try AWS ECS (Container) next
         # - main useful info we can get it is AWS Availability Zone
         # "Limits":{"CPU":1,"Memory":2048},
@@ -738,8 +741,5 @@ fi
 # /FINAL PRINT/
 #
 echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/ ,//g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/, Built *$//'
-
-# clean-up
-rm -f $LSCPU
 
 # EOF
