@@ -251,7 +251,7 @@ MEM=`dmesg 2>/dev/null | awk '/Memory:.*K available/{print $4}' | sed 's/.*\///;
 [ -z "$MEM" ] && MEM=`free -k 2>/dev/null |awk '/^Mem:/{printf("%.0fGB", $2/1024/1024)}'`
 [ -z "$MEM" -a -e /proc/meminfo ] && MEM=`awk '/^MemTotal:/{printf("%.0fGB", $2/1024/1024)}' /proc/meminfo 2>/dev/null`
 if [ "$MEM" = "0GB" -o "$MEM" = "1GB" ]; then
-  MEM=`dmesg | awk '/Memory:.*K available/{print $4}' | sed 's/.*\///; s/K$//' | awk '{printf("%.0fMB\n", $1/1024)}' | sed 's/^9..MB/1GB/; s/^1...MB/1GB/'`
+  MEM=`dmesg 2>/dev/null | awk '/Memory:.*K available/{print $4}' | sed 's/.*\///; s/K$//' | awk '{printf("%.0fMB\n", $1/1024)}' | sed 's/^9..MB/1GB/; s/^1...MB/1GB/'`
   [ -z "$MEM" ] && MEM=`free -k 2>/dev/null |awk '/^Mem:/{printf("%.0fMB", $2/1024)}' | sed 's/^9..MB/1GB/; s/^1...MB/1GB/'`
   [ -z "$MEM" ] && MEM=`awk '/^MemTotal:/{printf("%.0fMB", $2/1024)}' /proc/meminfo`
 fi
