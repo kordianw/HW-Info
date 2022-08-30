@@ -295,7 +295,7 @@ elif [ -s /etc/almalinux-release ]; then
   OS_VERSION=`cat /etc/almalinux-release 2>/dev/null | sed 's/^.* \([0-9].*$\)/\1/'`
 fi
 [ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/*release* 2>/dev/null |sort |uniq |awk -F= '/^(NAME|VERSION)=/{print $NF}' |sed 's/"//g; s#GNU/Linux##; s/ (\(.*\))/ \u\1/' |xargs`
-[ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/issue 2>/dev/null |sed 's/^Welcome to //i' | awk '{print $1,$2}' | xargs | sed 's/^ //; s/ $//'`
+[ -z "$OS_VERSION" ] && OS_VERSION=`cat /etc/issue 2>/dev/null |sed 's/^[Ww]elcome to //' | awk '{print $1,$2}' | xargs | sed 's/^ //; s/ $//'`
 [ -z "$OS_VERSION" -a -x "/usr/bin/sw_vers" ] && OS_VERSION=`sw_vers -productVersion 2>/dev/null | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" -a -x "/usr/sbin/system_profiler" ] && OS_VERSION=`system_profiler SPSoftwareDataType 2>/dev/null | awk -F: '/System Version:/{print $NF}' | sed 's/^ //; s/ (.*$//'`
 [ -z "$OS_VERSION" ] && OS_VERSION=`uname -r |sed 's/(.*//'`
@@ -608,7 +608,7 @@ rm -f $EVIDENCE_FILE
 #  GET_URL="curl -s"
 #fi
 
-if which curl >&/dev/null; then
+if which curl >&/dev/null && which timeout >&/dev/null; then
   CLOUD_DATA=/tmp/cloud_data-$$
 
   # try AWS first
