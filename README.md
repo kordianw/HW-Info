@@ -1,7 +1,7 @@
-# HW-Info
+# Cloud HW-Info
 Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, Windows, Public Cloud, Container, Chromebook, etc)
-... delivered as a 1-liner, eg: useful as part of logging into any machine, such as the one in the public cloud.
 ... good support for VMs in the public cloud (Amazon AWS, Azure, Google GCP) and containers (Kubernetes, Docker, AWS ECS, etc)
+... delivered as a 1-liner, eg: useful as part of logging into any machine, such as the one in the public cloud.
 
 ## Description
 Provides the following information as a 1-liner:
@@ -19,7 +19,7 @@ Provides the following information as a 1-liner:
 - Real or virtual CPUs? (CPUs vs vCPUs)
 - CPU model/type and CPU speed (in GHz)
 - CPU Architecture (eg: Haswell, Skylake, Ice Lake, etc)
-- 32bit or 64bit system?
+- 32bit or 64bit system? + package type (eg: amd64)
 - Local Disk sizes (in human friendly format)
 - SSD (incl. NVMe) or HDD (spinning disk)?
 - FS type (eg: ext4, ntfs, btrfs)
