@@ -466,11 +466,11 @@ if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
     [ -n "$DOMAIN" -a "$DOMAIN" = "compute-1" ] && DOMAIN=`nslookup "$IP" 2>/dev/null |awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g'`
 
     [ -z "$DOMAIN" ] && DOMAIN=`host "$IP" 2>/dev/null |awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $2}'`
-    [ -n "$DOMAIN" -a "$DOMAIN" = "ip" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
-    [ -n "$DOMAIN" -a "$DOMAIN" = "bc" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
-    [ -n "$DOMAIN" -a "$DOMAIN" = "internal" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
-    [ -n "$DOMAIN" -a "$DOMAIN" = "default" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
-    [ -n "$DOMAIN" -a "$DOMAIN" = "compute-1" ] && DOMAIN=`host "$IP" 2>/dev/null awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
+    [ -n "$DOMAIN" -a "$DOMAIN" = "ip" ] && DOMAIN=`host "$IP" 2>/dev/null| awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
+    [ -n "$DOMAIN" -a "$DOMAIN" = "bc" ] && DOMAIN=`host "$IP" 2>/dev/null| awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
+    [ -n "$DOMAIN" -a "$DOMAIN" = "internal" ] && DOMAIN=`host "$IP" 2>/dev/null| awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
+    [ -n "$DOMAIN" -a "$DOMAIN" = "default" ] && DOMAIN=`host "$IP" 2>/dev/null| awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
+    [ -n "$DOMAIN" -a "$DOMAIN" = "compute-1" ] && DOMAIN=`host "$IP" 2>/dev/null| awk '{print $NF}' | grep -v NXDOMAIN |awk -F. '{print $3}'`
   fi
 fi
 if [ "$DOMAIN" = "$HOST" ]; then
