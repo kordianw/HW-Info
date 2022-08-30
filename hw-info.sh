@@ -359,13 +359,22 @@ if [ "$OS_TYPE" = "MacOS (Darwin)" -o "$OS_TYPE" = "MacOS" -o "$OS_TYPE" = "Darw
   fi
 fi
 
-OS_YEAR=`uname -v |grep -Eo "[12][09][0-9]{2}" |tail -1 |sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/"`
+OS_YEAR=`uname -v 2>/dev/null |grep -Eo "[12][09][0-9]{2}" |tail -1 |sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/"`
 
 
 #
 # 64bit of 32bit
 #
-BIT_TYPE=`uname -m | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/armv7./32bit/'`
+BIT_TYPE=`uname -m 2>/dev/null | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/armv7./32bit/'`
+[ -z "$BIT_TYPE" ] && BIT_TYPE=`arch 2>/dev/null | sed 's/.*64$/64bit/; s/.*32$/32bit/; s/i[36]86/32bit/; s/armv7./32bit/'`
+
+# package architecture
+PKG_ARCH=`dpkg --print-architecture 2>/dev/null`
+[ -z "$PKG_ARCH" ] && PKG_ARCH=`arch 2>/dev/null`
+[ -z "$PKG_ARCH" ] && PKG_ARCH=`uname -m 2>/dev/null`
+[ -z "$PKG_ARCH" ] && PKG_ARCH=`lscpu 2>/dev/null | awk '/^Architecture:/{print $NF}'`
+
+[ -n "$PKG_ARCH" ] && PKG_ARCH="/$PKG_ARCH"
 
 
 #
@@ -742,6 +751,6 @@ fi
 #
 # /FINAL PRINT/
 #
-echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/ ,//g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/, Built *$//'
+echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$PKG_ARCH$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" |sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/ ,//g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/, Built *$//'
 
 # EOF
