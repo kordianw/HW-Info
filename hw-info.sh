@@ -599,7 +599,9 @@ rm -f $EVIDENCE_FILE
 
 ###############################
 
-# basic support for AWS & GCP servers in the public cloud
+#
+# Support for AWS, GCP, Azure servers in the public cloud + basic support for Containers
+#
 
 #if which wget >&/dev/null; then
 #  # prefer wget as it's faster/smaller than curl for small files
