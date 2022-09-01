@@ -636,7 +636,7 @@ rm -f $EVIDENCE_FILE
 
 # if something is baremetal, we can optimize the cloud query
 if [ -n "$VM" -a -z "$CONTAINER" ]; then
-  if echo "$VM" | grep -q BareMetal; then
+  if echo "$VM" | egrep -q 'BareMetal|Laptop|Notebook'; then
     if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80"; then
       if ! echo "$KERNEL_TYPE" | egrep -qi 'aws|azure|gcp'; then
         NOT_A_CLOUD_MACHINE="yes"
