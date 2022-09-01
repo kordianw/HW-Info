@@ -634,7 +634,18 @@ rm -f $EVIDENCE_FILE
 #  GET_URL="curl -s"
 #fi
 
-if which curl >&/dev/null && which timeout >&/dev/null; then
+# if something is baremetal, we can optimize the cloud query
+if [ -n "$VM" -a -z "$CONTAINER" ]; then
+  if echo "$VM" | grep -q BareMetal; then
+    if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80"; then
+      if ! echo "$KERNEL_TYPE" | egrep -qi 'aws|azure|gcp'; then
+        NOT_A_CLOUD_MACHINE="yes"
+      fi
+    fi
+  fi
+fi
+
+if [ -z "$NOT_A_CLOUD_MACHINE" ] &&  which curl >&/dev/null && which timeout >&/dev/null; then
   CLOUD_DATA=/tmp/cloud_data-$$
 
   # try AWS first
