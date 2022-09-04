@@ -645,7 +645,14 @@ if [ -n "$VM" -a -z "$CONTAINER" ]; then
   fi
 fi
 
-if [ -z "$NOT_A_CLOUD_MACHINE" ] &&  which curl >&/dev/null && which timeout >&/dev/null; then
+# can we actually talk to metadata servers?
+if [ -z "$NOT_A_CLOUD_MACHINE" ] && which curl >&/dev/null && which timeout >&/dev/null; then
+  if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80"; then
+    NOT_A_CLOUD_MACHINE="yes"
+  fi
+fi
+
+if [ -z "$NOT_A_CLOUD_MACHINE" ] && which curl >&/dev/null && which timeout >&/dev/null; then
   CLOUD_DATA=/tmp/cloud_data-$$
 
   # try AWS first
