@@ -396,7 +396,7 @@ if [ "$(lsblk -d -e 1,7 -o NAME,TYPE 2>/dev/null | grep disk | wc -l)" = 1 ]; th
 fi
 [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | awk '/^(sd|vd|xvd|nvme|mmcblk|hd).* disk$/{print $2}' | sed 's/^1$/HDD/; s/^0$/SSD/' | sort | uniq | xargs | sed 's/ /+/g;')
 [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(diskutil info disk0 2>/dev/null | awk '/Solid State/{print $NF}' | sed 's/Yes/SSD/; s/No/HDD/')
-if which wmic >&/dev/null; then
+if command -v wmic >&/dev/null; then
   [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(wmic diskdrive list 2>/dev/null | grep PHYSICALDRIVE0 | grep -ci NVME | sed 's/^1$/NVMe SSD/; s/^0$/HDD/')
   [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(wmic diskdrive get Caption, MediaType, Index, InterfaceType 2>/dev/null | egrep -v 'USB|External' | grep " 0 " | grep -ci NVME | sed 's/^1$/NVMe SSD/; s/^0$/HDD/')
   [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(wmic diskdrive list 2>/dev/null | grep PHYSICALDRIVE0 | grep -ci SSD | sed 's/^1$/SSD/; s/^0$/HDD/')
@@ -596,7 +596,7 @@ if [ -n "$ROOT_INODE_NO" ]; then
   [ $ROOT_INODE_NO -gt 150 ] && echo "$ROOT_INODE_NO" >>$EVIDENCE_FILE
 fi
 
-if which printenv >&/dev/null; then
+if command -v printenv >&/dev/null; then
   printenv 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT|AWS_ECS' | head -1 >>$EVIDENCE_FILE
 else
   set 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT|AWS_ECS' | head -1 >>$EVIDENCE_FILE
@@ -646,13 +646,13 @@ if [ -n "$VM" -a -z "$CONTAINER" ]; then
 fi
 
 # can we actually talk to metadata servers?
-if [ -z "$NOT_A_CLOUD_MACHINE" ] && which curl >&/dev/null && which timeout >&/dev/null; then
+if [ -z "$NOT_A_CLOUD_MACHINE" ] && command -v curl >&/dev/null && command -v timeout >&/dev/null; then
   if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80"; then
     NOT_A_CLOUD_MACHINE="yes"
   fi
 fi
 
-if [ -z "$NOT_A_CLOUD_MACHINE" ] && which curl >&/dev/null && which timeout >&/dev/null; then
+if [ -z "$NOT_A_CLOUD_MACHINE" ] && command -v curl >&/dev/null && command -v timeout >&/dev/null; then
   CLOUD_DATA=/tmp/cloud_data-$$
 
   # try AWS first
