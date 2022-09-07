@@ -67,7 +67,7 @@ if [ -n "$VM" ]; then
 fi
 
 # add the word VM to a non obvious hypervisor types
-if [ -n "$VM" -a $(echo $VM | egrep -ic 'VM|container') -eq 0 ]; then
+if [ -n "$VM" -a $(egrep -ic 'VM|container' <<<$VM) -eq 0 ]; then
   VM=$(echo "$VM VM" | sed 's/Microsoft VM/Hyper-V\/VM/')
 fi
 
@@ -89,12 +89,12 @@ fi
 if [ -z "$HW" ]; then
   HW=$(wmic csproduct get vendor, name, version 2>/dev/null | awk -F '  ' '/^[^N][^a][^m][^e]/{print $2,$3,$1}')
   EXTRA_HW=$(wmic computersystem get manufacturer, model 2>|/dev/null | awk -F '  ' '/^[^M][^a][^n][^u]/{print $1,$2}')
-  if ! echo "$HW" | grep -q "$EXTRA_HW"; then
+  if ! grep -q "$EXTRA_HW" <<<$HW; then
     HW="$HW $EXTRA_HW"
   fi
 fi
 
-[ -n "$HW" ] && HW="$(echo $HW | sed 's/^ //; s/LENOVO/Lenovo/; s/TOSHIBA/Toshiba/; s/Hewlett Packard/HP/; s/DELL/Dell/; s/ASUSTeK COMPUTER INC\./Asus/; s/ASUSTeK/Asus/; s/ -\[[A-Z0-9]*\]- *$//; s/Hyper-V Microsoft VM/Microsoft Hyper-V/; s/ Corp\.//; s/ Inc\.//; s/_Droplet Droplet/ Droplet/; s/^[0-9][0-9][^ ]* //; s/ [0-9]\.[0-9][^ ]* / /;')" # do not allow HW starting with digits
+[ -n "$HW" ] && HW="$(sed 's/^ //; s/LENOVO/Lenovo/; s/TOSHIBA/Toshiba/; s/Hewlett Packard/HP/; s/DELL/Dell/; s/ASUSTeK COMPUTER INC\./Asus/; s/ASUSTeK/Asus/; s/ -\[[A-Z0-9]*\]- *$//; s/Hyper-V Microsoft VM/Microsoft Hyper-V/; s/ Corp\.//; s/ Inc\.//; s/_Droplet Droplet/ Droplet/; s/^[0-9][0-9][^ ]* //; s/ [0-9]\.[0-9][^ ]* / /;' <<<$HW)" # do not allow HW starting with digits
 [ -n "$HW" ] && HW=": $HW"
 if [ -z "$HW" -a "$VM" = "VMware" ]; then
   VM="VM"
@@ -105,7 +105,7 @@ fi
 KERNEL_TYPE=""
 KTYPE=$(uname -r 2>/dev/null | egrep '^.*-[a-z][a-z]*$' | egrep -v '\-(generic|default)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/')
 if [ -n "$KTYPE" ]; then
-  KERNEL_TYPE="/$(echo $KTYPE | tr 'a-z' 'A-Z')"
+  KERNEL_TYPE="/$(tr 'a-z' 'A-Z' <<<$KTYPE)"
 fi
 
 #
@@ -118,15 +118,15 @@ if [ -n "$CPU_MODEL" -a "$CPU_MODEL" = "unknown" ]; then
   CPU_MODEL=$(cat /proc/cpuinfo 2>/dev/null | awk -F: '/^vendor_id/{print $NF}' | uniq | sed 's/GenuineIntel/Intel/')
 fi
 if [ -n "$CPU_MODEL" ]; then
-  CPU_MODEL=$(echo "$CPU_MODEL" | sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Xeon(R) Gold/Xeon Gold/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/Intel(R) Pentium(R)/Pentium/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/ [0-9][0-9]-Core$//; s/^ //; s/ $//; s/  / /g;')
+  CPU_MODEL=$(sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Xeon(R) Gold/Xeon Gold/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/Intel(R) Pentium(R)/Pentium/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/ [0-9][0-9]-Core$//; s/^ //; s/ $//; s/  / /g;' <<<$CPU_MODEL)
 
   # special translations for Google Cloud (GCP) cases
-  CPU_MODEL=$(echo "$CPU_MODEL" | sed 's/AMD EPYC 7B12/AMD EPYC 7B12\/7742/')
+  CPU_MODEL=$(sed 's/AMD EPYC 7B12/AMD EPYC 7B12\/7742/' <<<$CPU_MODEL)
 fi
 
-if echo "$CPU_MODEL" | grep -Eq 'MHz|GHz'; then
+if grep -Eq 'MHz|GHz' <<<$CPU_MODEL; then
   CPU_FREQ=""
-  CPU_MODEL="$(echo $CPU_MODEL | sed 's/\(\.[0-9]\)0GHz/\1GHz/')"
+  CPU_MODEL="$(sed 's/\(\.[0-9]\)0GHz/\1GHz/' <<<$CPU_MODEL)"
 else
   CPU_FREQ=$(awk '/CPU max MHz/{printf("%.2fGHz", $NF/1000)}' $LSCPU)
   [ -z "$CPU_FREQ" ] && CPU_FREQ=$(awk '/CPU MHz/{printf("%.2fGHz", $NF/1000)}' $LSCPU)
@@ -226,11 +226,11 @@ if [ -n "$CPU_MODEL" ]; then
     #
 
     # AMD
-    if echo "$CPU_MODEL" | egrep -q 'AMD EPYC (7351P|7401P|7551P|7251|7261|7281|7301|7351|7371|7401|7451|7501|7551|7571|7601)'; then
+    if egrep -q 'AMD EPYC (7351P|7401P|7551P|7251|7261|7281|7301|7351|7371|7401|7451|7501|7551|7571|7601)' <<<$CPU_MODEL; then
       CPU_NAME="Naples'17"
-    elif echo "$CPU_MODEL" | egrep -q 'AMD EPYC (7B12|7232P|7302P|7402P|7502P|7702P|7252|7262|7272|7282|7302P|7352|7402P|7452|7502P|7532|7542|7552|7642|7662|7702P|7742|7F32|7F52|7F72)'; then
+    elif egrep -q 'AMD EPYC (7B12|7232P|7302P|7402P|7502P|7702P|7252|7262|7272|7282|7302P|7352|7402P|7452|7502P|7532|7542|7552|7642|7662|7702P|7742|7F32|7F52|7F72)' <<<$CPU_MODEL; then
       CPU_NAME="Rome'19"
-    elif echo "$CPU_MODEL" | egrep -q 'AMD EPYC (7B13|7773X|7763|7713|7713P|7663|7643|7573X|75F3|7543|7543P|7513|7453|7473X|74F3|7443|7443P|7413|7373X|73F3|7343|7313|7313P|72F3|7R13)'; then
+    elif egrep -q 'AMD EPYC (7B13|7773X|7763|7713|7713P|7663|7643|7573X|75F3|7543|7543P|7513|7453|7473X|74F3|7443|7443P|7413|7373X|73F3|7343|7313|7313P|72F3|7R13)' <<<$CPU_MODEL; then
       CPU_NAME="Milan'21"
     fi
 
@@ -310,18 +310,18 @@ fi
 if echo "$OS_TYPE $OS_VERSION" | grep -q "^[A-Z][a-z]* Linux [A-Z][a-z]*"; then
   FIRST=$(echo "$OS_TYPE $OS_VERSION" | awk '{print $1}')
   THIRD=$(echo "$OS_TYPE $OS_VERSION" | awk '{print $3}')
-  [ "$FIRST" = "$THIRD" ] && OS_VERSION=$(echo $OS_VERSION | sed "s/^$THIRD//")
+  [ "$FIRST" = "$THIRD" ] && OS_VERSION=$(sed "s/^$THIRD//" <<<$OS_VERSION)
 fi
 
 # Debian & Ubuntu has a special format
 if echo "$OS_TYPE $OS_VERSION" | grep -q Debian; then
   DEBIAN_VERSION=$(cat /etc/debian_version 2>/dev/null | grep '[0-9]' | grep -v '[A-Z]')
-  OS_VERSION=$(echo $OS_VERSION | sed 's/\([0-9]\) \([A-Za-z]*\)/\1 "\l\2"/')
+  OS_VERSION=$(sed 's/\([0-9]\) \([A-Za-z]*\)/\1 "\l\2"/' <<<$OS_VERSION)
   [ -n "$DEBIAN_VERSION" ] && OS_VERSION=$(echo $OS_VERSION | sed "s/^\([0-9][0-9]*\) /$DEBIAN_VERSION /; s/ \([0-9][0-9]*\) / $DEBIAN_VERSION /;")
 elif echo "$OS_TYPE $OS_VERSION" | grep -q Ubuntu; then
-  OS_VERSION=$(echo $OS_VERSION | sed 's/LTS \([A-Z][a-z]* [A-Z][a-z]*\)$/LTS (\1)/; s/\([0-9]\) \([A-Z][a-z]* [A-Z][a-z]*\)$/\1 (\2)/;')
+  OS_VERSION=$(sed 's/LTS \([A-Z][a-z]* [A-Z][a-z]*\)$/LTS (\1)/; s/\([0-9]\) \([A-Z][a-z]* [A-Z][a-z]*\)$/\1 (\2)/;' <<<$OS_VERSION)
 elif echo "$OS_TYPE $OS_VERSION" | grep -q "Common Base Linux Mariner"; then
-  OS_VERSION=$(echo $OS_VERSION | sed 's/Common Base Linux Mariner/CBL-Mariner/')
+  OS_VERSION=$(sed 's/Common Base Linux Mariner/CBL-Mariner/' <<<$OS_VERSION)
 fi
 
 # MacOS releases: see here:
@@ -384,7 +384,7 @@ HD_SIZE=$(lsblk -d -e 1,7 -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,TYPE" 2>
 [ -z "$HD_SIZE" ] && HD_SIZE=$(df -hl / 2>/dev/null | egrep -v '^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/[0-9]/{print $2}' | xargs | sed 's/ /+/g; s/Gi/GB/')
 
 # format nicely
-[ -n "$HD_SIZE" ] && HD_SIZE=$(echo $HD_SIZE | sed 's/GB$/G/; s/\.[0123]G/G/')
+[ -n "$HD_SIZE" ] && HD_SIZE=$(sed 's/GB$/G/; s/\.[0123]G/G/' <<<$HD_SIZE)
 
 # SSD or HDD?
 if [ "$(lsblk -d -e 1,7 -o NAME,TYPE 2>/dev/null | grep disk | wc -l)" = 1 ]; then
@@ -434,7 +434,7 @@ BUILT=$(ls -lact --full-time /etc 2>/dev/null | awk 'END {print $6}')
 [ -z "$BUILT" ] && BUILT=$(date -r $(pkgutil --pkg-info com.apple.pkg.CoreFP 2>/dev/null | awk '/install-time/{print $2}') 2>/dev/null)
 [ -z "$BUILT" ] && BUILT=$(date -r $(pkgutil --pkg-info com.apple.pkg.macOSBrain 2>/dev/null | awk '/install-time/{print $2}') 2>/dev/null)
 [ -n "$BUILT" ] && BUILT_FMT=$(date "+%b'%g" -d "$BUILT" 2>/dev/null)
-[ -n "$BUILT" -a -z "$BUILT_FMT" ] && BUILT_FMT=$(echo $BUILT | grep -Eo "[12][09][0-9]{2}" | sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/")
+[ -n "$BUILT" -a -z "$BUILT_FMT" ] && BUILT_FMT=$(grep -Eo "[12][09][0-9]{2}" | sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/" <<<$BUILT)
 
 #
 # HOST & DOMAIN NAME
@@ -469,7 +469,7 @@ fi
 if [ "$DOMAIN" = "$HOST" ]; then
   DOMAIN=""
 elif [ -n "$DOMAIN" ]; then
-  DOMAIN="/$(echo $DOMAIN | tr a-z A-Z)"
+  DOMAIN="/$(tr a-z A-Z <<<$DOMAIN)"
   [ "$DOMAIN" = "/LOCALDOMAIN" -o "$DOMAIN" = "/LOCALHOST" ] && DOMAIN=""
 fi
 
@@ -483,8 +483,8 @@ if [ -n "$IP" ]; then
   [ -z "$DNS_NAME" ] && DNS_NAME=$(host "$IP" 2>/dev/null | awk '{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $1}')
 
   if [ -n "$DNS_NAME" -a "$DNS_NAME" != "$HOST" -a "$DNS_NAME" != "localhost" ]; then
-    DNS_NAME_LC=$(echo $DNS_NAME | tr 'A-Z' 'a-z')
-    HOST_LC=$(echo $HOST | tr 'A-Z' 'a-z')
+    DNS_NAME_LC=$(tr 'A-Z' 'a-z' <<<$DNS_NAME)
+    HOST_LC=$(tr 'A-Z' 'a-z' <<<$HOST)
     [ "$DNS_NAME_LC" != "$HOST_LC" ] && HOST_EXTRA=" ($DNS_NAME)"
   fi
 fi
@@ -565,7 +565,7 @@ if [ -s /sys/class/dmi/id/chassis_type ]; then
   if [ -z "$SYS_TYPE" ]; then
     [ -f /sys/module/battery/initstate -o -d /proc/acpi/battery/BAT0 -o -L /sys/class/power_supply/BAT0 ] && SYS_TYPE="Laptop"
   fi
-  if [ -n "$SYS_TYPE" -a "$SYS_TYPE" = "Desktop" ] && echo "$VM" | grep -q VM; then
+  if [ -n "$SYS_TYPE" -a "$SYS_TYPE" = "Desktop" ] && grep -q VM <<<$VM; then
     SYS_TYPE=
   fi
   [ -n "$SYS_TYPE" ] && SYS_TYPE=" $SYS_TYPE"
@@ -636,9 +636,9 @@ rm -f $EVIDENCE_FILE
 
 # if something is baremetal, we can optimize the cloud query
 if [ -n "$VM" -a -z "$CONTAINER" ]; then
-  if echo "$VM" | egrep -q 'BareMetal|Laptop|Notebook'; then
+  if egrep -q 'BareMetal|Laptop|Notebook' <<<$VM; then
     if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80"; then
-      if ! echo "$KERNEL_TYPE" | egrep -qi 'aws|azure|gcp'; then
+      if ! egrep -qi 'aws|azure|gcp' <<<$KERNEL_TYPE; then
         NOT_A_CLOUD_MACHINE="yes"
       fi
     fi
@@ -666,7 +666,7 @@ if [ -z "$NOT_A_CLOUD_MACHINE" ] && command -v curl >&/dev/null && command -v ti
 
     if [ -n "$AWS_MACHINE_TYPE" ]; then
       CLOUD_MACHINE_TYPE="AWS: "
-      if ! echo "$HW" | grep -iq "$AWS_MACHINE_TYPE"; then
+      if ! grep -iq "$AWS_MACHINE_TYPE" <<<$HW; then
         CLOUD_MACHINE_TYPE="AWS/$AWS_MACHINE_TYPE: "
       fi
     fi
@@ -698,7 +698,7 @@ if [ -z "$NOT_A_CLOUD_MACHINE" ] && command -v curl >&/dev/null && command -v ti
       fi
 
       if [ -n "$GCP_CPU_PLATFORM" ]; then
-        GCP_CPU_PLATFORM=$(echo $GCP_CPU_PLATFORM | sed 's/^Intel //; s/^AMD //')
+        GCP_CPU_PLATFORM=$(sed 's/^Intel //; s/^AMD //' <<<$GCP_CPU_PLATFORM)
         if ! echo "$CPU_MODEL$CPU_FREQ" | grep -iq "$GCP_CPU_PLATFORM"; then
           CLOUD_CPU_PLATFORM="/$GCP_CPU_PLATFORM"
         fi
@@ -735,7 +735,7 @@ if [ -z "$NOT_A_CLOUD_MACHINE" ] && command -v curl >&/dev/null && command -v ti
           AWS_MEM_LIMIT=$(sed 's/^.*"Limits":{"CPU":[0-9]*,"Memory":\([0-9]*\)},.*/\1/' $CLOUD_DATA 2>/dev/null)
           CONTAINER="$CONTAINER (CPU Limit=$AWS_CPU_LIMIT, MEM Limit=$AWS_MEM_LIMIT)"
 
-          if echo "$AWS_DC_ZONE_RAW" | egrep -q '^[a-z][a-z1-4-]*$'; then
+          if egrep -q '^[a-z][a-z1-4-]*$' <<<$AWS_DC_ZONE_RAW; then
             AWS_DC_ZONE=$AWS_DC_ZONE_RAW
           fi
           if [ -n "$AWS_DC_ZONE" ]; then
@@ -758,15 +758,15 @@ fi
 # - all LINODE HDs are now SSD (KVM can't detect that and also for Alpine Linux)
 # - can override HD-type as SSD, if we know it's SSD from the public-cloud metadata
 # - add Kubernetes limits, if known
-if echo "$DOMAIN" | grep -qi linode; then
+if grep -qi linode <<<$DOMAIN; then
   if [ "$VM" = "KVM" -a "$HD_TYPE" = "HDD" ]; then
     HD_TYPE="SSD"
-  elif [ "$VM" = "VMware" -a "$HD_TYPE" = "HDD" ] && echo "$HW" | grep -q 'QEMU Standard PC'; then
+  elif [ "$VM" = "VMware" -a "$HD_TYPE" = "HDD" ] && grep -q 'QEMU Standard PC' <<<$HW; then
     HD_TYPE="SSD"
   fi
 fi
-if echo "$CLOUD_DISK_TYPE" | egrep -iq 'SSD|Premium_LRS'; then
-  if [ "$HD_TYPE" = "HDD" ] && echo "$VM" | grep -iq VM; then
+if egrep -iq 'SSD|Premium_LRS' <<<$CLOUD_DISK_TYPE; then
+  if [ "$HD_TYPE" = "HDD" ] && grep -iq VM <<<$VM; then
     HD_TYPE="SSD"
   fi
 fi
