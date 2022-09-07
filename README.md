@@ -1,7 +1,7 @@
 # Cloud HW-Info
 Portable &amp; simple HW-Info script - quickly &amp; easily get an idea of the HW you're working on (Linux, MacOS, Windows, Public Cloud, Container, Chromebook, etc)
-... good support for VMs in the public cloud (Amazon AWS, Azure, Google GCP) and containers (Kubernetes, Docker, AWS ECS, etc)
-... delivered as a 1-liner, eg: useful as part of logging into any machine, such as the one in the public cloud.
+- good support for VMs in the public cloud (Amazon AWS, Azure, Google GCP) and containers (Kubernetes, Docker, AWS ECS, etc)
+- delivered as a 1-liner, eg: useful as part of logging into any machine, such as the one in the public cloud.
 
 ## Description
 Provides the following information as a 1-liner:
