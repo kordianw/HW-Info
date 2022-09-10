@@ -103,7 +103,7 @@ fi
 
 # Kernel type, append to HW in the end
 KERNEL_TYPE=""
-KTYPE=$(uname -r 2>/dev/null | egrep '^.*-[a-z][a-z]*$' | egrep -v '\-(generic|default)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/')
+KTYPE=$(uname -r 2>/dev/null | sed 's/amzn2.*/-aws/' | egrep '^.*-[a-z][a-z]*$' | egrep -v '\-(generic|default)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/')
 if [ -n "$KTYPE" ]; then
   KERNEL_TYPE="/$(tr 'a-z' 'A-Z' <<<$KTYPE)"
 fi
@@ -638,7 +638,7 @@ rm -f $EVIDENCE_FILE
 if [ -n "$VM" -a -z "$CONTAINER" ]; then
   if egrep -q 'BareMetal|Laptop|Notebook' <<<$VM; then
     if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80"; then
-      if ! egrep -qi 'aws|azure|gcp' <<<$KERNEL_TYPE; then
+      if ! egrep -qi 'aws|azure|gcp|amzn2' <<<$KERNEL_TYPE; then
         NOT_A_CLOUD_MACHINE="yes"
       fi
     fi
@@ -647,8 +647,10 @@ fi
 
 # can we actually talk to metadata servers?
 if [ -z "$NOT_A_CLOUD_MACHINE" ] && command -v curl >&/dev/null && command -v timeout >&/dev/null; then
-  if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80"; then
-    NOT_A_CLOUD_MACHINE="yes"
+  if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80" >&/dev/null; then
+    if ! egrep -qi 'aws|azure|gcp|amzn2' <<<$KERNEL_TYPE; then
+      NOT_A_CLOUD_MACHINE="yes"
+    fi
   fi
 fi
 
