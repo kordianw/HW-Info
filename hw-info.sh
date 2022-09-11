@@ -103,7 +103,7 @@ fi
 
 # Kernel type, append to HW in the end
 KERNEL_TYPE=""
-KTYPE=$(uname -r 2>/dev/null | sed 's/amzn2.*/-aws/' | egrep '^.*-[a-z][a-z]*$' | egrep -v '\-(generic|default)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/')
+KTYPE=$(uname -r 2>/dev/null | sed 's/amzn2.*/-amzn/' | egrep '^.*-[a-z][a-z]*$' | egrep -v '\-(generic|default)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/')
 if [ -n "$KTYPE" ]; then
   KERNEL_TYPE="/$(tr 'a-z' 'A-Z' <<<$KTYPE)"
 fi
@@ -634,11 +634,14 @@ rm -f $EVIDENCE_FILE
 #  GET_URL="curl -s"
 #fi
 
-# if something is baremetal, we can optimize the cloud query
+# if something is baremetal, we can optimize the cloud query later on
+# - by doing one simple connection now, we save a curl later
 if [ -n "$VM" -a -z "$CONTAINER" ]; then
   if egrep -q 'BareMetal|Laptop|Notebook' <<<$VM; then
-    if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80"; then
-      if ! egrep -qi 'aws|azure|gcp|amzn2' <<<$KERNEL_TYPE; then
+    timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80" >&/dev/null
+    RC=$?
+    if [ "$RC" -ne 0 -a "$RC" -ne 1 ]; then
+      if ! egrep -qi 'aws|azure|gcp|amzn' <<<$KERNEL_TYPE; then
         NOT_A_CLOUD_MACHINE="yes"
       fi
     fi
@@ -647,8 +650,10 @@ fi
 
 # can we actually talk to metadata servers?
 if [ -z "$NOT_A_CLOUD_MACHINE" ] && command -v curl >&/dev/null && command -v timeout >&/dev/null; then
-  if ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80" >&/dev/null; then
-    if ! egrep -qi 'aws|azure|gcp|amzn2' <<<$KERNEL_TYPE; then
+  timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80" >&/dev/null
+  RC=$?
+  if [ "$RC" -ne 0 -a "$RC" -ne 1 ]; then
+    if ! egrep -qi 'aws|azure|gcp|amzn' <<<$KERNEL_TYPE; then
       NOT_A_CLOUD_MACHINE="yes"
     fi
   fi
@@ -786,6 +791,6 @@ fi
 #
 # /FINAL PRINT/
 #
-echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$PKG_ARCH$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" | sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/ ,//g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/x86_64\/x86_64/x86_64/; s/, Built *$//'
+echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$PKG_ARCH$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" | sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/ ,//g; s/ \//\//g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/x86_64\/x86_64/x86_64/; s/, Built *$//'
 
 # EOF
