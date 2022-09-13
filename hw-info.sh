@@ -434,7 +434,7 @@ BUILT=$(ls -lact --full-time /etc 2>/dev/null | awk 'END {print $6}')
 [ -z "$BUILT" ] && BUILT=$(date -r $(pkgutil --pkg-info com.apple.pkg.CoreFP 2>/dev/null | awk '/install-time/{print $2}') 2>/dev/null)
 [ -z "$BUILT" ] && BUILT=$(date -r $(pkgutil --pkg-info com.apple.pkg.macOSBrain 2>/dev/null | awk '/install-time/{print $2}') 2>/dev/null)
 [ -n "$BUILT" ] && BUILT_FMT=$(date "+%b'%g" -d "$BUILT" 2>/dev/null)
-[ -n "$BUILT" -a -z "$BUILT_FMT" ] && BUILT_FMT=$(grep -Eo "[12][09][0-9]{2}" | sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/" <<<$BUILT)
+[ -n "$BUILT" -a -z "$BUILT_FMT" ] && BUILT_FMT=$(grep -Eo "[12][09][0-9]{2}" <<<$BUILT | sed "s/^[12][09]\([0-9][0-9]\)$/\'\1/")
 
 #
 # HOST & DOMAIN NAME
