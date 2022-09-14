@@ -118,7 +118,7 @@ if [ -n "$CPU_MODEL" -a "$CPU_MODEL" = "unknown" ]; then
   CPU_MODEL=$(cat /proc/cpuinfo 2>/dev/null | awk -F: '/^vendor_id/{print $NF}' | uniq | sed 's/GenuineIntel/Intel/')
 fi
 if [ -n "$CPU_MODEL" ]; then
-  CPU_MODEL=$(sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Xeon(R) Gold/Xeon Gold/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/Intel(R) Pentium(R)/Pentium/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/ [0-9][0-9]-Core$//; s/^ //; s/ $//; s/  / /g;' <<<$CPU_MODEL)
+  CPU_MODEL=$(sed 's/Intel(R) Xeon(R) CPU //; s/Intel(R) Xeon(R) Platinum/Xeon Platinum/; s/Intel(R) Xeon(R) Gold/Xeon Gold/; s/Intel(R) Core(TM) //; s/Intel(R) Celeron(TM)/Celeron/; s/Intel(R) Pentium(R)/Pentium/; s/ [Rr]ev / Rev/g; s/ Processor//; s/ CPU//; s/Virtual/Virt/; s/version /v/; s/ [0-9][0-9]-Core$//; s/ [0-1] @/ @/; s/^ //; s/ $//; s/  / /g;' <<<$CPU_MODEL)
 
   # special translations for Google Cloud (GCP) cases
   CPU_MODEL=$(sed 's/AMD EPYC 7B12/AMD EPYC 7B12\/7742/' <<<$CPU_MODEL)
