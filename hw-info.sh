@@ -74,7 +74,7 @@ fi
 #
 # HARDWARE TYPE
 #
-HW=$(cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null | sed 's/[^[:print:]]//' | sort -u | grep -v '^\.*$' | xargs | sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/innotek GmbH Oracle Corporation VirtualBox/Oracle VirtualBox/; s/Intel Corporation//; s/ Corporation//; s/UEFI Release v[0-9].[0-9]*//; s/Virtual Machine/VM/; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/ V[0-9]\.[0-9][0-9]*.*//; s/ + /+/g; s/\b\([A-Za-z]\+\)[ ,\n]\1/\1/g; s/\([^ ]*\) \([^ ]*\) \([^ ]*\) \(\2\) /\1 \2 \3 /g; s/  / /g; s/^[0-9]\.[0-9]* //; s/^ //; s/ $//' | awk '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}{printf("\n")}')
+HW=$(cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null | sed 's/[^[:print:]]//' | sort -u | grep -v '^\.*$' | xargs | sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/innotek GmbH Oracle Corporation VirtualBox/Oracle VirtualBox/; s/Intel Corporation//; s/ Corporation//; s/UEFI Release v[0-9].[0-9]*//; s/Virtual Machine/VM/; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/VMware7,1/VMware7/; s/ V[0-9]\.[0-9][0-9]*.*//; s/ + /+/g; s/\b\([A-Za-z]\+\)[ ,\n]\1/\1/g; s/\([^ ]*\) \([^ ]*\) \([^ ]*\) \(\2\) /\1 \2 \3 /g; s/  / /g; s/^[0-9]\.[0-9]* //; s/^ //; s/ $//' | awk '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}{printf("\n")}' |sed 's/ $//')
 [ -z "$HW" ] && HW=$(dmesg 2>/dev/null | grep "DMI:" | sed 's/.*: //' | awk -F/ '{print $1}' | sed 's/VMware, Inc. VMware Virtual Platform//; s/ Plus/+/; s/ Model//')
 # NOTE: to prune dups, can also use: awk -v RS="[ \n]+" '!n[$0]++'
 
@@ -791,6 +791,6 @@ fi
 #
 # /FINAL PRINT/
 #
-echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$PKG_ARCH$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" | sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/ ,//g; s/ \//\//g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/x86_64\/x86_64/x86_64/; s/, Built *$//'
+echo "$HOST$DOMAIN$HOST_EXTRA$CLOUD_LOCATION: $OS_TYPE $OS_VERSION/$OS_YEAR$EXTRA_OS_INFO, $CLOUD_MACHINE_TYPE$VM$CONTAINER$SYS_TYPE$HW$KERNEL_TYPE, $MEM RAM, $NO_OF_CPU x $CPU_TYPE $CPU_MODEL$CPU_FREQ$CLOUD_CPU_PLATFORM, $BIT_TYPE$PKG_ARCH$CLOUD_ARCHITECTURE, $HD_SIZE $HD_TYPE/$FS_TYPE$CLOUD_DISK_TYPE, Built $BUILT_FMT" | sed -e 's/\b\([A-Za-z0-9]\+\)[ ,\n]\1/\1/g; s/ ,/,/g; s/ \//\//g; s/Linux \([A-Z][a-z]*\) Linux/\1 Linux/; s/BareMetal Notebook/Notebook/; s/BareMetal Laptop/Laptop/; s/x86_64\/x86_64/x86_64/; s/, Built *$//'
 
 # EOF
