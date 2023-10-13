@@ -451,12 +451,12 @@ if [ -z "$DOMAIN" -o "$DOMAIN" = "$HOST" ]; then
   [ -z "$IP" -a -x /sbin/ifconfig ] && IP=$(/sbin/ifconfig 2>/dev/null | awk '/inet.*(broadcast|Bcast)/ && !/127\.0\./{print $2}' | tail -1 | sed 's/^.*://')
   [ -z "$IP" -o "$IP" = "127.0.0.1" -o "$IP" = "127.0.1.1" ] && IP=$(hostname -I 2>/dev/null | awk '{print $1}')
   if [ -n "$IP" ]; then
-    DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $2}' | sed 's/[^A-Za-z0-9_-]*//g')
-    [ -n "$DOMAIN" -a "$DOMAIN" = "ip" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g')
-    [ -n "$DOMAIN" -a "$DOMAIN" = "bc" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g')
-    [ -n "$DOMAIN" -a "$DOMAIN" = "internal" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g')
-    [ -n "$DOMAIN" -a "$DOMAIN" = "default" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g')
-    [ -n "$DOMAIN" -a "$DOMAIN" = "compute-1" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g')
+    DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $2}' | sed 's/[^A-Za-z0-9_-]*//g' | tr -d '\n')
+    [ -n "$DOMAIN" -a "$DOMAIN" = "ip" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g' | tr -d '\n')
+    [ -n "$DOMAIN" -a "$DOMAIN" = "bc" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g' | tr -d '\n')
+    [ -n "$DOMAIN" -a "$DOMAIN" = "internal" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g' | tr -d '\n')
+    [ -n "$DOMAIN" -a "$DOMAIN" = "default" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g' | tr -d '\n')
+    [ -n "$DOMAIN" -a "$DOMAIN" = "compute-1" ] && DOMAIN=$(nslookup "$IP" 2>/dev/null | awk '/Name:|name =/{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}' | sed 's/[^A-Za-z0-9_-]*//g' | tr -d '\n')
 
     [ -z "$DOMAIN" ] && DOMAIN=$(host "$IP" 2>/dev/null | awk '{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $2}')
     [ -n "$DOMAIN" -a "$DOMAIN" = "ip" ] && DOMAIN=$(host "$IP" 2>/dev/null | awk '{print $NF}' | grep -v NXDOMAIN | awk -F. '{print $3}')
@@ -634,9 +634,19 @@ rm -f $EVIDENCE_FILE
 #  GET_URL="curl -s"
 #fi
 
+# to speed things up, we can make sure something is not a cloud machine if it's BAREMETAL and on 192.168.1. subnet
+if [ `/sbin/ifconfig 2>/dev/null| egrep -c 'inet 192.168\.1\..*netmask (255.255.255\.0|0xffffff00).*(broadcast|Bcast).*192.168.1\.255'` -eq 1 ]; then
+  if egrep -q 'BareMetal|Laptop|Notebook' <<<$VM; then
+    NOT_A_CLOUD_MACHINE="yes"
+    if [ -z "$NOT_A_CLOUD_MACHINE" -a `hostname -i 2>/dev/null | head -1 | tail -1 | egrep -c '^192.168.1.[0-9][0-9]* ::1$'` -eq 1 ]; then
+      NOT_A_CLOUD_MACHINE="yes"
+    fi
+  fi
+fi
+
 # if something is baremetal, we can optimize the cloud query later on
 # - by doing one simple connection now, we save a curl later
-if [ -n "$VM" -a -z "$CONTAINER" ]; then
+if [ -z "$NOT_A_CLOUD_MACHINE" -a -n "$VM" -a -z "$CONTAINER" ]; then
   if egrep -q 'BareMetal|Laptop|Notebook' <<<$VM; then
     timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80" >&/dev/null
     RC=$?
