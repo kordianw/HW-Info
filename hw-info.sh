@@ -130,7 +130,7 @@ if grep -Eq 'MHz|GHz' <<<$CPU_MODEL; then
 else
   CPU_FREQ=$(awk '/CPU max MHz/{printf("%.2fGHz", $NF/1000)}' $LSCPU)
   [ -z "$CPU_FREQ" ] && CPU_FREQ=$(awk '/CPU MHz/{printf("%.2fGHz", $NF/1000)}' $LSCPU)
-  [ -n "$CPU_FREQ" ] && CPU_FREQ=" $(echo $CPU_FREQ | sed 's/\(\.[0-9]\)0GHz/\1GHz/')"
+  [ -n "$CPU_FREQ" ] && CPU_FREQ=" $(echo $CPU_FREQ | sed 's/\(\.[0-9]\)0GHz/\1GHz/; s/\.19/.2/; s/\.59/.6/; s/\.79/.8/')"
 fi
 
 NO_OF_CPU=$(awk '/^CPU\(s\):/{print $NF}' $LSCPU)
@@ -182,10 +182,20 @@ if [ -n "$CPU_MODEL" ]; then
       dcd[21,1]="Ice Lake;19";             dcd[21,2]="Family 6 Model 126";
       dcd[22,1]="Ice Lake;19";             dcd[22,2]="Family 6 Model 125";
 
+      dcd[23,1]="Alder Lake;21";           dcd[23,2]="Family 6 Model 151";
+      dcd[24,1]="Alder Lake;21";           dcd[24,2]="Family 6 Model 154";
+
+      dcd[25,1]="Tiger Lake;20";           dcd[25,2]="Family 6 Model 140";
+      dcd[26,1]="Tiger Lake;20";           dcd[26,2]="Family 6 Model 141";
+      dcd[27,1]="Rocket Lake;21";          dcd[27,2]="Family 6 Model 167";
+
+      dcd[28,1]="Raptor Lake;22";          dcd[28,2]="Family 6 Model 183";
+      dcd[29,1]="Raptor Lake;22";          dcd[29,2]="Family 6 Model 186";
+
       str = "Family " fam " Model " mod;
-      #printf("str= %s\n", str);
+      #printf("str=<%s>\n", str);
       res="";
-      for(k=1;k <=21;k++) { if (dcd[k,2] == str) {res=dcd[k,1];break;}}
+      for(k=1;k <=29;k++) { if (dcd[k,2] == str) {res=dcd[k,1];break;}}
       if (k == 3) {
         # so Cooper Lake/Cascade Lake/SkyLake)
         if (match(mod_nm, / [86543]2[0-9][0-9]/) > 0) { res="Cascade Lake;19";} else
@@ -407,12 +417,12 @@ HD_TYPE="Disk"
 [ -n "$HD_TYPE_SDD" ] && HD_TYPE=$HD_TYPE_SDD
 
 # FS Type?
-FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/\/$/{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay / /root /usr 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay /home 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/\/$/{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay / /root /usr 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay /home 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 [ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th / 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 [ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 
