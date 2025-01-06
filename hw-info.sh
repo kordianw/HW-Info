@@ -418,13 +418,13 @@ HD_TYPE="Disk"
 
 # FS Type?
 FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/\/$/{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay / /root /usr 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay /home 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th / 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay / /root /usr 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay /home 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th / 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs|fuse.gcfsd' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs|fuse.gcfsd' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 
 # Apple
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=$(diskutil list 2>/dev/null | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/')
