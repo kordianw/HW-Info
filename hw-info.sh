@@ -387,7 +387,7 @@ PKG_ARCH=$(dpkg --print-architecture 2>/dev/null)
 # - we also work out if it's an SSD or a HDD
 # - we exclude anything in MB range, shoul be GB or higher
 #
-HD_SIZE=$(lsblk -d -e 1,7 -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,TYPE" 2>/dev/null | awk '/^(sd|vd|xvd|nvme|mmcblk|hd).* disk$/{print $4}' | egrep -v "K$|M$" | sed 's/\([0-9]\)\([A-Z]\)/\1 \2/' | awk '{ printf("%.0f%s\n", $1,$2) }' | head -3 | xargs | sed 's/ /+/g')
+HD_SIZE=$(lsblk -d -e 1,7 -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,TYPE" 2>/dev/null | egrep -v '^sd.*0 swap *\[SWAP\]|sda *.:0 *1 *.*G  0 iso9660' | awk '/^(sd|vd|xvd|nvme|mmcblk|hd).* disk$/{print $4}' | egrep -v "K$|M$" | sed 's/\([0-9]\)\([A-Z]\)/\1 \2/' | awk '{ printf("%.0f%s\n", $1,$2) }' | head -3 | xargs | sed 's/ /+/g')
 [ -z "$HD_SIZE" -a -x "/usr/sbin/diskutil" ] && HD_SIZE=$(diskutil list 2>/dev/null | awk '/:.*disk0$/{print $3$4}' | sed 's/^\*//;')
 [ -z "$HD_SIZE" ] && HD_SIZE=$(df -hl 2>/dev/null | egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/[0-9]/{print $2}' | grep -v "M$" | xargs | sed 's/ /+/g; s/Gi/GB/')
 [ -z "$HD_SIZE" ] && HD_SIZE=$(df -hl 2>/dev/null | egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/[0-9]/{print $2}' | xargs | sed 's/ /+/g; s/Gi/GB/')
@@ -397,6 +397,7 @@ HD_SIZE=$(lsblk -d -e 1,7 -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,TYPE" 2>
 [ -n "$HD_SIZE" ] && HD_SIZE=$(sed 's/GB$/G/; s/\.[0123]G/G/' <<<$HD_SIZE)
 
 # SSD or HDD?
+# - only doing this when just a single disk
 if [ "$(lsblk -d -e 1,7 -o NAME,TYPE 2>/dev/null | grep disk | wc -l)" = 1 ]; then
   if lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | grep disk | egrep -q "mmcblk.* 0 "; then
     HD_TYPE_SDD="SDHC"
@@ -417,11 +418,11 @@ HD_TYPE="Disk"
 [ -n "$HD_TYPE_SDD" ] && HD_TYPE=$HD_TYPE_SDD
 
 # FS Type?
-FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/\/$/{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay / /root /usr 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay /home 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay -x efivarfs -x iso9660 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/\/$/{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay -x efivarfs -x iso9660 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay -x efivarfs -x iso9660 / /root /usr 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay -x efivarfs -x iso9660 /home 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay -x efivarfs -x iso9660 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 [ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 [ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th / 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs|fuse.gcfsd' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 [ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs|fuse.gcfsd' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
@@ -436,7 +437,7 @@ FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashf
 #
 # WHEN BUILT - can use / or /etc (for Mac, we use the pkgutil query of BaseSystem)
 #
-BUILT=$(ls -lact --full-time /etc 2>/dev/null | awk 'END {print $6}')
+BUILT=$(ls -lact --full-time /etc 2>/dev/null | egrep -v 'bash_completion' | awk 'END {print $6}')
 [ "$BUILT" = "0" ] && BUILT=$(ls -lact --full-time /etc | awk 'END {print $7}')
 [ -z "$BUILT" ] && BUILT=$(date -r $(pkgutil --pkg-info com.apple.pkg.BaseSystem 2>/dev/null | awk '/install-time/{print $2}') 2>/dev/null)
 [ -z "$BUILT" ] && BUILT=$(date -r $(pkgutil --pkg-info com.apple.pkg.BaseSystemBinaries 2>/dev/null | awk '/install-time/{print $2}') 2>/dev/null)
