@@ -101,6 +101,9 @@ if [ -z "$HW" -a "$VM" = "VMware" ]; then
   HW=": VMware"
 fi
 
+# add more info if WSL = Windows Subsystem for Linux
+[ "$VM" = "Hyper-V/VM" -a -e "/proc/sys/fs/binfmt_misc/WSLInterop" ] && VM="Hyper-V/WSL/VM"
+
 # Kernel type, append to HW in the end
 KERNEL_TYPE=""
 KTYPE=$(uname -r 2>/dev/null | sed 's/amzn2.*/-amzn/' | egrep '^.*-[a-z][a-z]*$' | egrep -v '\-(generic|default)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/')
