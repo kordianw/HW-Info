@@ -62,19 +62,19 @@ fi
 [ -z "$VM" -a -e /proc/cpuinfo ] && grep -q "^[Ff]lags.*hypervisor" /proc/cpuinfo && VM="VM"
 
 if [ -n "$VM" ]; then
-  VM_TYPE=$(awk -F: '/[Vv]irtualization [Tt]ype/{print $NF}' $LSCPU | sed 's/^ *//' | egrep -v '^full$')
+  VM_TYPE=$(awk -F: '/[Vv]irtualization [Tt]ype/{print $NF}' $LSCPU | sed 's/^ *//' | grep -E -v '^full$')
   [ -n "$VM_TYPE" ] && VM="$VM/$VM_TYPE"
 fi
 
 # add the word VM to a non obvious hypervisor types
-if [ -n "$VM" -a $(egrep -ic 'VM|container' <<<$VM) -eq 0 ]; then
+if [ -n "$VM" -a $(grep -E -ic 'VM|container' <<<$VM) -eq 0 ]; then
   VM=$(echo "$VM VM" | sed 's/Microsoft VM/Hyper-V\/VM/')
 fi
 
 #
 # HARDWARE TYPE
 #
-HW=$(cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null | sed 's/[^[:print:]]//' | sort -u | grep -v '^\.*$' | xargs | sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/innotek GmbH Oracle Corporation VirtualBox/Oracle VirtualBox/; s/Intel Corporation//; s/ Corporation//; s/UEFI Release v[0-9].[0-9]*//; s/Virtual Machine/VM/; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/VMware7,1/VMware7/; s/ V[0-9]\.[0-9][0-9]*.*//; s/ + /+/g; s/\b\([A-Za-z]\+\)[ ,\n]\1/\1/g; s/\([^ ]*\) \([^ ]*\) \([^ ]*\) \(\2\) /\1 \2 \3 /g; s/  / /g; s/^[0-9]\.[0-9]* //; s/^ //; s/ $//' | awk '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}{printf("\n")}' |sed 's/ $//')
+HW=$(cat /sys/firmware/devicetree/base/mode /proc/device-tree/model /sys/devices/virtual/dmi/id/chassis_vendor /sys/class/dmi/id/board_vendor /sys/devices/virtual/dmi/id/sys_vendor /sys/devices/virtual/dmi/id/product_name /sys/class/dmi/id/product_family /sys/class/dmi/id/product_version 2>/dev/null | sed 's/[^[:print:]]//' | sort -u | grep -v '^\.*$' | xargs | sed 's/No Enclosure//; s/VMware, Inc.//; s/VMware Virtual Platform//; s/innotek GmbH Oracle Corporation VirtualBox/Oracle VirtualBox/; s/Intel Corporation//; s/ Corporation//; s/UEFI Release v[0-9].[0-9]*//; s/Virtual Machine/VM/; s/Raspberry Pi/RaspberryPi/; s/ Plus/+/; s/ Model//; s/None//; s/HVM domU Xen/HVM domU/; s/VMware7,1/VMware7/; s/Not Specified//; s/ V[0-9]\.[0-9][0-9]*.*//; s/ + /+/g; s/\b\([A-Za-z]\+\)[ ,\n]\1/\1/g; s/\([^ ]*\) \([^ ]*\) \([^ ]*\) \(\2\) /\1 \2 \3 /g; s/  / /g; s/^[0-9]\.[0-9]* //; s/^ //; s/ $//' | awk '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}{printf("\n")}' |sed 's/ $//')
 [ -z "$HW" ] && HW=$(dmesg 2>/dev/null | grep "DMI:" | sed 's/.*: //' | awk -F/ '{print $1}' | sed 's/VMware, Inc. VMware Virtual Platform//; s/ Plus/+/; s/ Model//')
 # NOTE: to prune dups, can also use: awk -v RS="[ \n]+" '!n[$0]++'
 
@@ -99,14 +99,21 @@ fi
 if [ -z "$HW" -a "$VM" = "VMware" ]; then
   VM="VM"
   HW=": VMware"
+  ESX=$(vmware-toolbox-cmd stat raw text session 2>/dev/null| awk '/version =/{print $4,$5}')
+  [ -n "$ESX" ] && HW="$HW $ESX"
 fi
 
 # add more info if WSL = Windows Subsystem for Linux
 [ "$VM" = "Hyper-V/VM" -a -e "/proc/sys/fs/binfmt_misc/WSLInterop" ] && VM="Hyper-V/WSL/VM"
+if echo "$VM" |grep -q "WSL"; then
+  if uname -r | grep -q "WSL2"; then
+    VM=`echo "$VM" | sed 's/WSL/WSL2/'`
+  fi
+fi
 
 # Kernel type, append to HW in the end
 KERNEL_TYPE=""
-KTYPE=$(uname -r 2>/dev/null | sed 's/amzn2.*/-amzn/' | egrep '^.*-[a-z][a-z]*$' | egrep -v '\-(generic|default)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/')
+KTYPE=$(uname -r 2>/dev/null | sed 's/amzn2.*/-amzn/' | grep -E '^.*-[a-z][a-z]*$' | grep -E -v '\-(generic|default)$' | sed 's/^.*-\([a-z][a-z]*$\)/\1/')
 if [ -n "$KTYPE" ]; then
   KERNEL_TYPE="/$(tr 'a-z' 'A-Z' <<<$KTYPE)"
 fi
@@ -239,11 +246,11 @@ if [ -n "$CPU_MODEL" ]; then
     #
 
     # AMD
-    if egrep -q 'AMD EPYC (7351P|7401P|7551P|7251|7261|7281|7301|7351|7371|7401|7451|7501|7551|7571|7601)' <<<$CPU_MODEL; then
+    if grep -E -q 'AMD EPYC (7351P|7401P|7551P|7251|7261|7281|7301|7351|7371|7401|7451|7501|7551|7571|7601)' <<<$CPU_MODEL; then
       CPU_NAME="Naples'17"
-    elif egrep -q 'AMD EPYC (7B12|7232P|7302P|7402P|7502P|7702P|7252|7262|7272|7282|7302P|7352|7402P|7452|7502P|7532|7542|7552|7642|7662|7702P|7742|7F32|7F52|7F72)' <<<$CPU_MODEL; then
+    elif grep -E -q 'AMD EPYC (7B12|7232P|7302P|7402P|7502P|7702P|7252|7262|7272|7282|7302P|7352|7402P|7452|7502P|7532|7542|7552|7642|7662|7702P|7742|7F32|7F52|7F72)' <<<$CPU_MODEL; then
       CPU_NAME="Rome'19"
-    elif egrep -q 'AMD EPYC (7B13|7773X|7763|7713|7713P|7663|7643|7573X|75F3|7543|7543P|7513|7453|7473X|74F3|7443|7443P|7413|7373X|73F3|7343|7313|7313P|72F3|7R13)' <<<$CPU_MODEL; then
+    elif grep -E -q 'AMD EPYC (7B13|7773X|7763|7713|7713P|7663|7643|7573X|75F3|7543|7543P|7513|7453|7473X|74F3|7443|7443P|7413|7373X|73F3|7343|7313|7313P|72F3|7R13)' <<<$CPU_MODEL; then
       CPU_NAME="Milan'21"
     fi
 
@@ -311,9 +318,9 @@ fi
 [ -z "$OS_VERSION" ] && OS_VERSION=$(uname -r | sed 's/(.*//')
 
 # special case for Amazon Linux which uses codename /etc/system
-if [ -s /etc/system-release ]; then
+if [ -s /etc/system-release -a ! -s /etc/fedora-release ]; then
   if echo "$OS_TYPE $OS_VERSION" | grep -q "[0-9]$"; then
-    if cat /etc/system-release | egrep -q '[a-z]\)$|[a-z]"$'; then
+    if cat /etc/system-release | grep -E -q '[a-z]\)$|[a-z]"$'; then
       OS_VERSION="$OS_VERSION $(awk '{print $NF}' /etc/system-release)"
     fi
   fi
@@ -390,11 +397,11 @@ PKG_ARCH=$(dpkg --print-architecture 2>/dev/null)
 # - we also work out if it's an SSD or a HDD
 # - we exclude anything in MB range, shoul be GB or higher
 #
-HD_SIZE=$(lsblk -d -e 1,7 -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,TYPE" 2>/dev/null | egrep -v '^sd.*0 swap *\[SWAP\]|sda *.:0 *1 *.*G  0 iso9660' | awk '/^(sd|vd|xvd|nvme|mmcblk|hd).* disk$/{print $4}' | egrep -v "K$|M$" | sed 's/\([0-9]\)\([A-Z]\)/\1 \2/' | awk '{ printf("%.0f%s\n", $1,$2) }' | head -3 | xargs | sed 's/ /+/g')
+HD_SIZE=$(lsblk -d -e 1,7 -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,TYPE" 2>/dev/null | grep -E -v '^sd.*0 swap *\[SWAP\]|sda *.:0 *1 *.*G  0 iso9660' | awk '/^(sd|vd|xvd|nvme|mmcblk|hd).* disk$/{print $4}' | grep -E -v "K$|M$" | sed 's/\([0-9]\)\([A-Z]\)/\1 \2/' | awk '{ printf("%.0f%s\n", $1,$2) }' | head -3 | xargs | sed 's/ /+/g')
 [ -z "$HD_SIZE" -a -x "/usr/sbin/diskutil" ] && HD_SIZE=$(diskutil list 2>/dev/null | awk '/:.*disk0$/{print $3$4}' | sed 's/^\*//;')
-[ -z "$HD_SIZE" ] && HD_SIZE=$(df -hl 2>/dev/null | egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/[0-9]/{print $2}' | grep -v "M$" | xargs | sed 's/ /+/g; s/Gi/GB/')
-[ -z "$HD_SIZE" ] && HD_SIZE=$(df -hl 2>/dev/null | egrep -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/[0-9]/{print $2}' | xargs | sed 's/ /+/g; s/Gi/GB/')
-[ -z "$HD_SIZE" ] && HD_SIZE=$(df -hl / 2>/dev/null | egrep -v '^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/[0-9]/{print $2}' | xargs | sed 's/ /+/g; s/Gi/GB/')
+[ -z "$HD_SIZE" ] && HD_SIZE=$(df -hl 2>/dev/null | grep -E -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/[0-9]/{print $2}' | grep -v "M$" | xargs | sed 's/ /+/g; s/Gi/GB/')
+[ -z "$HD_SIZE" ] && HD_SIZE=$(df -hl 2>/dev/null | grep -E -v '^none|^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/[0-9]/{print $2}' | xargs | sed 's/ /+/g; s/Gi/GB/')
+[ -z "$HD_SIZE" ] && HD_SIZE=$(df -hl / 2>/dev/null | grep -E -v '^cgroup|tmpfs|devtmpfs|nfs|smbfs|cifs|squashfs|fuse.sshfs' | awk '/[0-9]/{print $2}' | xargs | sed 's/ /+/g; s/Gi/GB/')
 
 # format nicely
 [ -n "$HD_SIZE" ] && HD_SIZE=$(sed 's/GB$/G/; s/\.[0123]G/G/' <<<$HD_SIZE)
@@ -402,9 +409,9 @@ HD_SIZE=$(lsblk -d -e 1,7 -o "NAME,MAJ:MIN,RM,SIZE,RO,FSTYPE,MOUNTPOINT,TYPE" 2>
 # SSD or HDD?
 # - only doing this when just a single disk
 if [ "$(lsblk -d -e 1,7 -o NAME,TYPE 2>/dev/null | grep disk | wc -l)" = 1 ]; then
-  if lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | grep disk | egrep -q "mmcblk.* 0 "; then
+  if lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | grep disk | grep -E -q "mmcblk.* 0 "; then
     HD_TYPE_SDD="SDHC"
-  elif lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | grep disk | egrep -q "nvme.* 0 "; then
+  elif lsblk -d -e 1,7 -o NAME,ROTA,TYPE 2>/dev/null | grep disk | grep -E -q "nvme.* 0 "; then
     HD_TYPE_SDD="NVMe SSD"
   fi
 fi
@@ -412,35 +419,35 @@ fi
 [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(diskutil info disk0 2>/dev/null | awk '/Solid State/{print $NF}' | sed 's/Yes/SSD/; s/No/HDD/')
 if command -v wmic >&/dev/null; then
   [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(wmic diskdrive list 2>/dev/null | grep PHYSICALDRIVE0 | grep -ci NVME | sed 's/^1$/NVMe SSD/; s/^0$/HDD/')
-  [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(wmic diskdrive get Caption, MediaType, Index, InterfaceType 2>/dev/null | egrep -v 'USB|External' | grep " 0 " | grep -ci NVME | sed 's/^1$/NVMe SSD/; s/^0$/HDD/')
+  [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(wmic diskdrive get Caption, MediaType, Index, InterfaceType 2>/dev/null | grep -E -v 'USB|External' | grep " 0 " | grep -ci NVME | sed 's/^1$/NVMe SSD/; s/^0$/HDD/')
   [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(wmic diskdrive list 2>/dev/null | grep PHYSICALDRIVE0 | grep -ci SSD | sed 's/^1$/SSD/; s/^0$/HDD/')
-  [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(wmic diskdrive get Caption, MediaType, Index, InterfaceType 2>/dev/null | egrep -v 'USB|External' | grep " 0 " | grep -ci SSD | sed 's/^1$/SSD/; s/^0$/HDD/')
+  [ -z "$HD_TYPE_SDD" ] && HD_TYPE_SDD=$(wmic diskdrive get Caption, MediaType, Index, InterfaceType 2>/dev/null | grep -E -v 'USB|External' | grep " 0 " | grep -ci SSD | sed 's/^1$/SSD/; s/^0$/HDD/')
 fi
 
 HD_TYPE="Disk"
 [ -n "$HD_TYPE_SDD" ] && HD_TYPE=$HD_TYPE_SDD
 
 # FS Type?
-FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay -x efivarfs -x iso9660 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/\/$/{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay -x efivarfs -x iso9660 2>/dev/null | egrep -v '/boot|/usr/lib/modules' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x cgroup -x overlay -x efivarfs -x iso9660 2>/dev/null | grep -E -v '/boot|/usr/lib/modules' | awk '/\/$/{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay -x efivarfs -x iso9660 2>/dev/null | grep -E -v '/boot|/usr/lib/modules' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 [ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay -x efivarfs -x iso9660 / /root /usr 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 [ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay -x efivarfs -x iso9660 /home 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 [ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup -x overlay -x efivarfs -x iso9660 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 [ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th -x tmpfs -x devtmpfs -x nfs -x nfs4 -x smbfs -x cifs -x squashfs -x fuse.sshfs -x fuse.gcfsd -x cgroup 2>/dev/null | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th / 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs|fuse.gcfsd' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
-[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th 2>/dev/null | egrep -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs|fuse.gcfsd' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th / 2>/dev/null | grep -E -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs|fuse.gcfsd' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
+[ -z "$FS_TYPE" ] && FS_TYPE=$(df -Th 2>/dev/null | grep -E -v 'nfs|smbfs|cifs|squashfs|fuse.sshfs|fuse.gcfsd' | awk '/ \//{print $2}' | sort -u | xargs | sed 's/ /+/g')
 
 # Apple
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=$(diskutil list 2>/dev/null | awk '/Apple_HFS.*disk0/{print $2}' | sed 's/Apple_HFS/hfs/')
-[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=$(diskutil list 2>/dev/null | awk '/disk0/{print $2}' | grep APFS | sed 's/Apple_APFS/apfs/' | egrep -v 'apfs_Recovery|apfs_IŚĆ')
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=$(diskutil list 2>/dev/null | awk '/disk0/{print $2}' | grep APFS | sed 's/Apple_APFS/apfs/' | grep -E -v 'apfs_Recovery|apfs_IŚĆ')
 
 [ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=$(diskutil list 2>/dev/null | awk '/Apple_HFS.*disk1/{print $2}' | sed 's/Apple_HFS/hfs/')
-[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=$(diskutil list 2>/dev/null | awk '/disk1/{print $2}' | grep APFS | sed 's/Apple_APFS/apfs/' | egrep -v 'apfs_Recovery|apfs_IŚĆ')
+[ -z "$FS_TYPE" -a -x "/usr/sbin/diskutil" ] && FS_TYPE=$(diskutil list 2>/dev/null | awk '/disk1/{print $2}' | grep APFS | sed 's/Apple_APFS/apfs/' | grep -E -v 'apfs_Recovery|apfs_IŚĆ')
 
 #
 # WHEN BUILT - can use / or /etc (for Mac, we use the pkgutil query of BaseSystem)
 #
-BUILT=$(ls -lact --full-time /etc 2>/dev/null | egrep -v 'bash_completion' | awk 'END {print $6}')
+BUILT=$(ls -lact --full-time /etc 2>/dev/null | grep -E -v 'bash_completion' | awk 'END {print $6}')
 [ "$BUILT" = "0" ] && BUILT=$(ls -lact --full-time /etc | awk 'END {print $7}')
 [ -z "$BUILT" ] && BUILT=$(date -r $(pkgutil --pkg-info com.apple.pkg.BaseSystem 2>/dev/null | awk '/install-time/{print $2}') 2>/dev/null)
 [ -z "$BUILT" ] && BUILT=$(date -r $(pkgutil --pkg-info com.apple.pkg.BaseSystemBinaries 2>/dev/null | awk '/install-time/{print $2}') 2>/dev/null)
@@ -595,12 +602,12 @@ fi
 # 5) container env vars
 EVIDENCE_FILE=/tmp/container-evidence-$$
 if [ -r /proc/1/cgroup ]; then
-  egrep -i 'docker|kubernetes|openshift|/ecs/|/lxc/|/ocp/|/kubepods/' /proc/1/cgroup | head -1 >>$EVIDENCE_FILE
-  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'docker|docker\|lxc' /proc/1/cgroup && CONTAINER_TYPE="Docker"
-  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'kubernetes|/kubepods/' /proc/1/cgroup && CONTAINER_TYPE="K8s"
-  [ -z "$CONTAINER_TYPE" ] && egrep -qi 'openshift|/ocp/' /proc/1/cgroup && CONTAINER_TYPE="OpenShift"
-  [ -z "$CONTAINER_TYPE" ] && egrep -qi '/ecs/' /proc/1/cgroup && CONTAINER_TYPE="AWS ECS"
-  [ -z "$CONTAINER_TYPE" ] && egrep -qi '/lxc/' /proc/1/cgroup && CONTAINER_TYPE="LXC"
+  grep -E -i 'docker|kubernetes|openshift|/ecs/|/lxc/|/ocp/|/kubepods/' /proc/1/cgroup | head -1 >>$EVIDENCE_FILE
+  [ -z "$CONTAINER_TYPE" ] && grep -E -qi 'docker|docker\|lxc' /proc/1/cgroup && CONTAINER_TYPE="Docker"
+  [ -z "$CONTAINER_TYPE" ] && grep -E -qi 'kubernetes|/kubepods/' /proc/1/cgroup && CONTAINER_TYPE="K8s"
+  [ -z "$CONTAINER_TYPE" ] && grep -E -qi 'openshift|/ocp/' /proc/1/cgroup && CONTAINER_TYPE="OpenShift"
+  [ -z "$CONTAINER_TYPE" ] && grep -E -qi '/ecs/' /proc/1/cgroup && CONTAINER_TYPE="AWS ECS"
+  [ -z "$CONTAINER_TYPE" ] && grep -E -qi '/lxc/' /proc/1/cgroup && CONTAINER_TYPE="LXC"
 fi
 
 [ -r /.dockerenv ] && echo "/.dockerenv" >>$EVIDENCE_FILE
@@ -611,9 +618,9 @@ if [ -n "$ROOT_INODE_NO" ]; then
 fi
 
 if command -v printenv >&/dev/null; then
-  printenv 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT|AWS_ECS' | head -1 >>$EVIDENCE_FILE
+  printenv 2>/dev/null | grep -E -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT|AWS_ECS' | head -1 >>$EVIDENCE_FILE
 else
-  set 2>/dev/null | egrep -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT|AWS_ECS' | head -1 >>$EVIDENCE_FILE
+  set 2>/dev/null | grep -E -q 'CONTAINER|KUBERNETES|DOCKER|OPENSHIFT|AWS_ECS' | head -1 >>$EVIDENCE_FILE
 fi
 
 if uname -s 2>/dev/null | grep -q Linux; then
@@ -649,10 +656,10 @@ rm -f $EVIDENCE_FILE
 #fi
 
 # to speed things up, we can make sure something is not a cloud machine if it's BAREMETAL and on 192.168.1. subnet
-if [ `/sbin/ifconfig 2>/dev/null| egrep -c 'inet 192.168\.1\..*netmask (255.255.255\.0|0xffffff00).*(broadcast|Bcast).*192.168.1\.255'` -eq 1 ]; then
-  if egrep -q 'BareMetal|Laptop|Notebook' <<<$VM; then
+if [ `/sbin/ifconfig 2>/dev/null| grep -E -c 'inet 192.168\.1\..*netmask (255.255.255\.0|0xffffff00).*(broadcast|Bcast).*192.168.1\.255'` -eq 1 ]; then
+  if grep -E -q 'BareMetal|Laptop|Notebook' <<<$VM; then
     NOT_A_CLOUD_MACHINE="yes"
-    if [ -z "$NOT_A_CLOUD_MACHINE" -a `hostname -i 2>/dev/null | head -1 | tail -1 | egrep -c '^192.168.1.[0-9][0-9]* ::1$'` -eq 1 ]; then
+    if [ -z "$NOT_A_CLOUD_MACHINE" -a `hostname -i 2>/dev/null | head -1 | tail -1 | grep -E -c '^192.168.1.[0-9][0-9]* ::1$'` -eq 1 ]; then
       NOT_A_CLOUD_MACHINE="yes"
     fi
   fi
@@ -661,11 +668,11 @@ fi
 # if something is baremetal, we can optimize the cloud query later on
 # - by doing one simple connection now, we save a curl later
 if [ -z "$NOT_A_CLOUD_MACHINE" -a -n "$VM" -a -z "$CONTAINER" ]; then
-  if egrep -q 'BareMetal|Laptop|Notebook' <<<$VM; then
+  if grep -E -q 'BareMetal|Laptop|Notebook' <<<$VM; then
     timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80" >&/dev/null
     RC=$?
     if [ "$RC" -ne 0 -a "$RC" -ne 1 ]; then
-      if ! egrep -qi 'aws|azure|gcp|amzn' <<<$KERNEL_TYPE; then
+      if ! grep -E -qi 'aws|azure|gcp|amzn' <<<$KERNEL_TYPE; then
         NOT_A_CLOUD_MACHINE="yes"
       fi
     fi
@@ -677,7 +684,7 @@ if [ -z "$NOT_A_CLOUD_MACHINE" ] && command -v curl >&/dev/null && command -v ti
   timeout 1 bash -c "cat < /dev/null > /dev/tcp/169.254.169.254/80" >&/dev/null
   RC=$?
   if [ "$RC" -ne 0 -a "$RC" -ne 1 ]; then
-    if ! egrep -qi 'aws|azure|gcp|amzn' <<<$KERNEL_TYPE; then
+    if ! grep -E -qi 'aws|azure|gcp|amzn' <<<$KERNEL_TYPE; then
       NOT_A_CLOUD_MACHINE="yes"
     fi
   fi
@@ -766,7 +773,7 @@ if [ -z "$NOT_A_CLOUD_MACHINE" ] && command -v curl >&/dev/null && command -v ti
           AWS_MEM_LIMIT=$(sed 's/^.*"Limits":{"CPU":[0-9]*,"Memory":\([0-9]*\)},.*/\1/' $CLOUD_DATA 2>/dev/null)
           CONTAINER="$CONTAINER (CPU Limit=$AWS_CPU_LIMIT, MEM Limit=$AWS_MEM_LIMIT)"
 
-          if egrep -q '^[a-z][a-z1-4-]*$' <<<$AWS_DC_ZONE_RAW; then
+          if grep -E -q '^[a-z][a-z1-4-]*$' <<<$AWS_DC_ZONE_RAW; then
             AWS_DC_ZONE=$AWS_DC_ZONE_RAW
           fi
           if [ -n "$AWS_DC_ZONE" ]; then
@@ -796,7 +803,7 @@ if grep -qi linode <<<$DOMAIN; then
     HD_TYPE="SSD"
   fi
 fi
-if egrep -iq 'SSD|Premium_LRS' <<<$CLOUD_DISK_TYPE; then
+if grep -E -iq 'SSD|Premium_LRS' <<<$CLOUD_DISK_TYPE; then
   if [ "$HD_TYPE" = "HDD" ] && grep -iq VM <<<$VM; then
     HD_TYPE="SSD"
   fi
@@ -806,8 +813,8 @@ if [ -n "$CONTAINER" ]; then
   # 5:cpu,cpuacct:/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-pod
 
   # different regexes:
-  [ -z "$CONTAINER_LIMITS" ] && CONTAINER_LIMITS=$(egrep ":cpu,cpuacct:|:memory:" /proc/1/cgroup 2>/dev/null | grep "/kubepods/" | sed 's/.*\/kubepods\/\([^\/]*\)\/.*/\1/' | sort -u | xargs | sed 's/ /+/g')
-  [ -z "$CONTAINER_LIMITS" ] && CONTAINER_LIMITS=$(egrep ":cpu,cpuacct:|:memory:" /proc/1/cgroup 2>/dev/null | grep "/kubepods.slice/" | sed 's/.*\/kubepods.slice\/kubepods-\([^\.]*\)\..*/\1/' | sort -u | xargs | sed 's/ /+/g')
+  [ -z "$CONTAINER_LIMITS" ] && CONTAINER_LIMITS=$(grep -E ":cpu,cpuacct:|:memory:" /proc/1/cgroup 2>/dev/null | grep "/kubepods/" | sed 's/.*\/kubepods\/\([^\/]*\)\/.*/\1/' | sort -u | xargs | sed 's/ /+/g')
+  [ -z "$CONTAINER_LIMITS" ] && CONTAINER_LIMITS=$(grep -E ":cpu,cpuacct:|:memory:" /proc/1/cgroup 2>/dev/null | grep "/kubepods.slice/" | sed 's/.*\/kubepods.slice\/kubepods-\([^\.]*\)\..*/\1/' | sort -u | xargs | sed 's/ /+/g')
 
   [ -n "$CONTAINER_LIMITS" ] && CONTAINER="$CONTAINER (CPU/Mem QoS=$CONTAINER_LIMITS)"
 fi
